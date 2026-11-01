@@ -1,0 +1,18 @@
+# Python environment
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Research data
+data/
+*.csv
+*.parquet
+*.pkl
+
+# Secrets
+.env
+.env.*
+
+# Experiment artifacts
+mlruns/
