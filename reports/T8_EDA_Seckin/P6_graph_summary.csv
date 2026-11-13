@@ -1,0 +1,13 @@
+﻿campaign,layer,beta,nodes,edges,action_pairs,shared_contents
+Catalonia,retweet,1.0,230,1400,2615,605
+Catalonia,hashtag,1.0,230,3155,7333,267
+Catalonia,mention,1.0,230,8271,47904,880
+Catalonia,url,1.0,230,916,1708,399
+Ghana_Nigeria,retweet,1.0,40,35,66,27
+Ghana_Nigeria,hashtag,1.0,40,170,433,17
+Ghana_Nigeria,mention,1.0,40,80,457,71
+Ghana_Nigeria,url,1.0,40,17,20,13
+Iran_5,retweet,1.0,447,811,1295,401
+Iran_5,hashtag,1.0,447,18291,95794,617
+Iran_5,mention,1.0,447,2105,8760,771
+Iran_5,url,1.0,447,731,1207,392
