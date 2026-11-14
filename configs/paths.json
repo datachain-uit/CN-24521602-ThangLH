@@ -1,5 +1,7 @@
 {
   "pote_dir": "data/Coordinated_Reply_Attacks_dataset",
   "german_dir": "data/CooRTweet_dataset",
-  "output_dir": "reports/T4_EDA_Pote_German"
+  "output_dir": "reports/T4_EDA_Pote_German",
+  "seckin_dir": "data/Seckin",
+  "t8_output_dir": "reports/T8_EDA_Seckin"
 }

@@ -1,14 +1,13 @@
+
 # Python environment
 .venv/
+.venv-kltn/
 venv/
 __pycache__/
 *.pyc
 
 # Research data
-data/
-*.csv
-*.parquet
-*.pkl
+/data/Seckin/
 
 # Secrets
 .env
