@@ -13,7 +13,8 @@ def matched_delta_t(t_u, t_v, keep_zero=True):
     u có ID nhỏ hơn v.
     u -> v: tìm hành động sau hẳn (>)
     v -> u: tìm hành động sau hoặc bằng (>=)
-    Đơn vị thời gian: phút.
+    Mỗi hành động nguồn được ghép với tối đa một hành động đích.
+    Đơn vị thời gian: phút. keep_zero=False loại delta bằng 0 sau khi ghép.
     """
     t_u = np.sort(np.asarray(t_u, dtype=float))
     t_v = np.sort(np.asarray(t_v, dtype=float))
@@ -23,10 +24,7 @@ def matched_delta_t(t_u, t_v, keep_zero=True):
 
     out = []
 
-    for src, tgt, side in (
-        (t_u, t_v, "right"),
-        (t_v, t_u, "left"),
-    ):
+    for src, tgt, side in ((t_u, t_v, "right"), (t_v, t_u, "left")):
         pos = np.searchsorted(tgt, src, side=side)
         ok = pos < len(tgt)
         out.append(tgt[pos[ok]] - src[ok])
@@ -35,29 +33,21 @@ def matched_delta_t(t_u, t_v, keep_zero=True):
     return d if keep_zero else d[d != 0]
 
 def count_content_users(events: pd.DataFrame) -> pd.DataFrame:
-    return (
-        events.groupby(["action_type", "content_id"])["user_id"]
-        .nunique()
-        .rename("n_users")
-        .reset_index()
-    )
+    return events.groupby(["action_type", "content_id"])["user_id"].nunique().rename("n_users").reset_index()
 
 
-def find_next_action_pairs(
-    events: pd.DataFrame,
-    keep_zero: bool = True,
-) -> pd.DataFrame:
-    records = []
+def find_next_action_pairs(events: pd.DataFrame, keep_zero: bool = True) -> pd.DataFrame:
+    """Ghép sự kiện theo lớp và nội dung, dùng thứ tự ID gốc của tài khoản.
+
+    ID chuỗi được so sánh theo thứ tự từ điển, ID số nguyên theo giá trị số.
+    """
     columns = [
-        "action_type", "content_id",
-        "source_user", "target_user",
-        "source_time", "target_time",
-        "delta_t",
+        "action_type", "content_id", "source_user", "target_user",
+        "source_time", "target_time", "delta_t",
     ]
+    records = {column: [] for column in columns}
 
-    for (action_type, content_id), group in events.groupby(
-        ["action_type", "content_id"]
-    ):
+    for (action_type, content_id), group in events.groupby(["action_type", "content_id"]):
         group = group.sort_values("timestamp")
 
         by_user = {
@@ -70,98 +60,59 @@ def find_next_action_pairs(
                 if source_user == target_user:
                     continue
 
-                # T10: strict/non-strict theo thứ tự ID.
-                side = (
-                    "right"
-                    if source_user < target_user
-                    else "left"
-                )
+                side = "right" if source_user < target_user else "left"
+                positions = target_times.searchsorted(source_times, side=side)
+                has_match = positions < len(target_times)
+                matched_source = source_times[has_match]
+                matched_target = target_times[positions[has_match]]
+                deltas = matched_target - matched_source
 
-                for source_time in source_times:
-                    pos = target_times.searchsorted(
-                        source_time,
-                        side=side,
-                    )
+                if not keep_zero:
+                    nonzero = deltas != 0
+                    matched_source = matched_source[nonzero]
+                    matched_target = matched_target[nonzero]
+                    deltas = deltas[nonzero]
 
-                    if pos >= len(target_times):
-                        continue
+                n_matches = len(deltas)
+                records["action_type"].extend([action_type] * n_matches)
+                records["content_id"].extend([content_id] * n_matches)
+                records["source_user"].extend([source_user] * n_matches)
+                records["target_user"].extend([target_user] * n_matches)
+                records["source_time"].extend(matched_source)
+                records["target_time"].extend(matched_target)
+                records["delta_t"].extend(deltas)
 
-                    target_time = target_times[pos]
-                    delta_t = target_time - source_time
-
-                    # B1-gốc: loại delta_t = 0.
-                    # B1-chuẩn: giữ delta_t = 0.
-                    if not keep_zero and delta_t == 0:
-                        continue
-
-                    records.append({
-                        "action_type": action_type,
-                        "content_id": content_id,
-                        "source_user": source_user,
-                        "target_user": target_user,
-                        "source_time": source_time,
-                        "target_time": target_time,
-                        "delta_t": delta_t,
-                    })
-
-    return pd.DataFrame.from_records(
-        records,
-        columns=columns,
-    )
+    if not records["delta_t"]:
+        return pd.DataFrame(columns=columns)
+    return pd.DataFrame(records)
 
 
-def prepare_action_pairs(
-    events: pd.DataFrame,
-    action_type: str | None,
-    keep_zero: bool = True,
-) -> pd.DataFrame:
-    layer = (
-        events
-        if action_type is None
-        else events.loc[events["action_type"] == action_type]
-    )
-
-    pairs = find_next_action_pairs(
-        layer,
-        keep_zero=keep_zero,
-    )
+def prepare_action_pairs(events: pd.DataFrame, action_type: str | None, keep_zero: bool = True) -> pd.DataFrame:
+    layer = events if action_type is None else events.loc[events["action_type"] == action_type]
+    pairs = find_next_action_pairs(layer, keep_zero=keep_zero)
 
     if pairs.empty:
         return pd.DataFrame(columns=PAIR_COLUMNS)
 
     counts = count_content_users(layer)
 
-    pairs = pairs.merge(
-        counts,
-        on=["action_type", "content_id"],
-        how="left",
-        validate="many_to_one",
-    )
+    pairs = pairs.merge(counts, on=["action_type", "content_id"], how="left", validate="many_to_one")
 
     if pairs["n_users"].isna().any() or (pairs["n_users"] < 2).any():
-        raise ValueError(
-            "Each matched content must have at least two users."
-        )
+        raise ValueError("Each matched content must have at least two users.")
 
+    source = pairs["source_user"]
+    target = pairs["target_user"]
+    canonical = source < target
     return pd.DataFrame({
-        "u": pairs[["source_user", "target_user"]].min(axis=1),
-        "v": pairs[["source_user", "target_user"]].max(axis=1),
-        "dd": pairs["delta_t"].to_numpy(
-            dtype=np.float64
-        ) / 1440.0,
-        "w0": 1.0 / (
-            pairs["n_users"].to_numpy(
-                dtype=np.float64
-            ) - 1.0
-        ),
+        "u": source.where(canonical, target),
+        "v": target.where(canonical, source),
+        "dd": pairs["delta_t"].to_numpy(dtype=np.float64) / 1440.0,
+        "w0": 1.0 / (pairs["n_users"].to_numpy(dtype=np.float64) - 1.0),
     })
 
 
-def build_layer_edges_from_pairs(
-    pairs: pd.DataFrame,
-    action_type: str | None,
-    beta: float,
-) -> pd.DataFrame:
+def build_layer_edges_from_pairs(pairs: pd.DataFrame, action_type: str | None, beta: float) -> pd.DataFrame:
     if pairs.empty:
         return pd.DataFrame(columns=EDGE_COLUMNS)
 
@@ -169,87 +120,44 @@ def build_layer_edges_from_pairs(
 
     weighted["weight"] = (
         pairs["w0"].to_numpy(dtype=np.float64)
-        * np.exp(
-            -float(beta)
-            * pairs["dd"].to_numpy(dtype=np.float64)
-        )
+        * np.exp(-float(beta) * pairs["dd"].to_numpy(dtype=np.float64))
     )
 
     edges = (
-        weighted.groupby(
-            ["u", "v"],
-            sort=True,
-            as_index=False,
-        )["weight"]
+        weighted.groupby(["u", "v"], sort=True, as_index=False)["weight"]
         .sum()
-        .rename(columns={
-            "u": "source_user",
-            "v": "target_user",
-        })
+        .rename(columns={"u": "source_user", "v": "target_user"})
     )
 
-    edges["action_type"] = (
-        "all" if action_type is None else action_type
-    )
+    edges["action_type"] = "all" if action_type is None else action_type
 
     return edges[EDGE_COLUMNS]
 
 
-def build_layer_graph_from_pairs(
-    pairs: pd.DataFrame,
-    nodes,
-    beta: float,
-    tolerance: float = 1e-9,
-) -> nx.Graph:
+def build_layer_graph_from_pairs(pairs: pd.DataFrame, nodes, beta: float, tolerance: float = 1e-9) -> nx.Graph:
     graph = nx.Graph()
     graph.add_nodes_from(nodes)
 
     edges = build_layer_edges_from_pairs(pairs, action_type=None, beta=beta)
     for row in edges.itertuples(index=False):
         if row.weight > tolerance:
-            graph.add_edge(
-                row.source_user,
-                row.target_user,
-                weight=float(row.weight),
-            )
+            graph.add_edge(row.source_user, row.target_user, weight=float(row.weight))
     return graph
 
 
 def build_layer_edges(
-    events: pd.DataFrame,
-    action_type: str | None,
-    beta: float,
-    keep_zero: bool = True,
+    events: pd.DataFrame, action_type: str | None, beta: float, keep_zero: bool = True,
 ) -> pd.DataFrame:
-    pairs = prepare_action_pairs(
-        events,
-        action_type,
-        keep_zero=keep_zero,
-    )
-
-    return build_layer_edges_from_pairs(
-        pairs,
-        action_type,
-        beta,
-    )
+    pairs = prepare_action_pairs(events, action_type, keep_zero=keep_zero)
+    return build_layer_edges_from_pairs(pairs, action_type, beta)
 
 
 def build_layer_graph(
-    events: pd.DataFrame,
-    action_type: str | None,
-    beta: float,
-    tolerance: float = 1e-9,
-    keep_zero: bool = True,
+    events: pd.DataFrame, action_type: str | None, beta: float,
+    tolerance: float = 1e-9, keep_zero: bool = True,
 ) -> nx.Graph:
-    pairs = prepare_action_pairs(
-        events,
-        action_type,
-        keep_zero=keep_zero,
-    )
+    pairs = prepare_action_pairs(events, action_type, keep_zero=keep_zero)
 
     return build_layer_graph_from_pairs(
-        pairs=pairs,
-        nodes=events["user_id"].unique(),
-        beta=beta,
-        tolerance=tolerance,
+        pairs=pairs, nodes=events["user_id"].unique(), beta=beta, tolerance=tolerance,
     )

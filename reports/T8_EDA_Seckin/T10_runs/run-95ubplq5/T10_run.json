@@ -1,0 +1,47 @@
+{
+  "git_commit": "0db9c18812928b93507a122a0ee6275737cd3a03",
+  "git_tracked_dirty": true,
+  "campaigns": [
+    "Catalonia",
+    "Ghana_Nigeria",
+    "Iran_5"
+  ],
+  "modes": [
+    "legacy",
+    "original",
+    "standard"
+  ],
+  "variants": {
+    "with_hashtag": [
+      "retweet",
+      "hashtag",
+      "mention",
+      "url"
+    ],
+    "without_hashtag": [
+      "retweet",
+      "mention",
+      "url"
+    ]
+  },
+  "beta_by_layer": {
+    "retweet": 1.0,
+    "hashtag": 1.0,
+    "mention": 1.0,
+    "url": 1.0
+  },
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "p3_config": {
+    "min_io": 2,
+    "min_control": 20,
+    "gap": 3
+  },
+  "n_results": 90,
+  "elapsed_seconds": 20.9245712000411
+}
