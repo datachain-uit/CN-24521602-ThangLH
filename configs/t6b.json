@@ -1,0 +1,36 @@
+{
+    "experiment": "T6b",
+    "review_date": "2026-11-15",
+    "data_seeds": [
+        20261108, 20261109, 20261110, 20261111, 20261112, 20261113, 20261114, 20261115,
+        20261116, 20261117, 20261118, 20261119, 20261120, 20261121, 20261122, 20261123,
+        20261124, 20261125, 20261126, 20261127, 20261128, 20261129, 20261130, 20261131,
+        20261132, 20261133, 20261134, 20261135, 20261136, 20261137
+    ],
+    "community_seeds": [42, 43, 44, 45, 46],
+    "configurations": [[1], [2], [3], [1, 2], [1, 3], [2, 3], [1, 2, 3]],
+    "beta_bounds": [0.0, 10.0],
+    "beta_grid_points": 1001,
+    "beta_grid_step": 0.01,
+    "student_beta_selection": "argmax_mean_modularity",
+    "original_beta_selection": "calculate_optimal_beta",
+    "keep_zero": false,
+    "timestamp_resolution_seconds": 1,
+    "pipelines": {
+        "student": {
+            "monoplex": "Leiden_Modularity",
+            "multiplex": "Leiden_Modularity",
+            "layer_weights": "uniform"
+        },
+        "original_reference": {
+            "monoplex": "greedy_modularity",
+            "monoplex_seeded": false,
+            "multiplex": "Leiden_Surprise",
+            "layer_weights": "edge_count"
+        }
+    },
+    "metrics": ["f1_star", "homogeneity", "weighted_precision"],
+    "quantiles": [0.1, 0.5, 0.9],
+    "u4_configuration": [3],
+    "u4_f1_threshold": 0.67
+}
