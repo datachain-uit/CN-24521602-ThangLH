@@ -7,7 +7,7 @@ __pycache__/
 *.pyc
 
 # Research data
-/data/Seckin/
+/data/
 
 # Secrets
 .env
