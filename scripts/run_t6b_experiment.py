@@ -17,12 +17,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-from src.simulation.synthetic import (
-    SimulationConfig,
-    generate_simulation1_dataset,
-    generate_simulation2_dataset,
-    generate_simulation3_dataset,
-)
+from src.simulation.synthetic import SimulationConfig, generate_simulation1_dataset, generate_simulation2_dataset, generate_simulation3_dataset
 
 from src.graph.time_aware import build_layer_graph
 
@@ -37,13 +32,11 @@ from time_aware_collaboration.models import get_time_damped_edge_list
 from time_aware_collaboration.modularity import calculate_optimal_beta as original_optimal_beta
 
 
-CONFIG_PATH = ROOT / "configs" / "t6b.json"
+with open(ROOT / "configs" / "paths.json", encoding="utf-8") as f: PATHS = json.load(f)
 
-GENERATORS = {
-    1: generate_simulation1_dataset,
-    2: generate_simulation2_dataset,
-    3: generate_simulation3_dataset,
-}
+CONFIG_PATH = ROOT / PATHS["t6b_config"]
+
+GENERATORS = {1: generate_simulation1_dataset, 2: generate_simulation2_dataset, 3: generate_simulation3_dataset}
 
 BASE_TIME = pd.Timestamp("2020-01-01")
 
@@ -57,10 +50,7 @@ def round_timestamps(events):
     events = events.copy()
     seconds = np.rint(events["timestamp"].to_numpy(dtype=float) * 60).astype(np.int64)
     events["timestamp"] = seconds / 60.0
-    events["time_string"] = [
-        (BASE_TIME + pd.Timedelta(seconds=int(s))).strftime("%Y-%m-%d %H:%M:%S")
-        for s in seconds
-    ]
+    events["time_string"] = [(BASE_TIME + pd.Timedelta(seconds=int(s))).strftime("%Y-%m-%d %H:%M:%S") for s in seconds]
     return events
 
 
@@ -159,14 +149,7 @@ def detect_original(graphs, users, community_seed):
         layers.append(g)
         layer_weights.append(g.ecount())
 
-    membership, _ = la.find_partition_multiplex(
-        layers,
-        la.SurpriseVertexPartition,
-        weights="weight",
-        layer_weights=layer_weights,
-        n_iterations=-1,
-        seed=community_seed,
-    )
+    membership, _ = la.find_partition_multiplex(layers, la.SurpriseVertexPartition, weights="weight", layer_weights=layer_weights, n_iterations=-1, seed=community_seed)
 
     groups = {}
 
@@ -234,9 +217,7 @@ def run_one_seed(data_seed, config, output_dir):
 
         G_student, beta_student, mean_q = build_student_graph(events, community_seeds)
 
-        G_original, beta_original, optimization_seed = build_original_graph(
-            events, users, data_seed, sim_id,
-        )
+        G_original, beta_original, optimization_seed = build_original_graph(events, users, data_seed, sim_id)
 
         graphs["student"][sim_id] = G_student
         graphs["original_reference"][sim_id] = G_original
@@ -326,12 +307,7 @@ def run_one_seed(data_seed, config, output_dir):
 
     elapsed = time.perf_counter() - start
 
-    print(
-        f"COMPLETED seed={data_seed} | "
-        f"rows={len(df)} | "
-        f"elapsed={elapsed:.2f}s",
-        flush=True,
-    )
+    print(f"COMPLETED seed={data_seed} | rows={len(df)} | elapsed={elapsed:.2f}s", flush=True)
 
     return df
 
@@ -348,9 +324,9 @@ def main():
 
     if args.pilot:
         data_seeds = data_seeds[:1]
-        output_dir = ROOT / "reports" / "t6b" / "pilot"
+        output_dir = ROOT / PATHS["t6b_pilot_dir"]
     else:
-        output_dir = ROOT / "reports" / "t6b" / "full"
+        output_dir = ROOT / PATHS["t6b_full_dir"]
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -364,11 +340,7 @@ def main():
     start = time.perf_counter()
 
     for index, data_seed in enumerate(data_seeds, 1):
-        print(
-            f"\n=== DATA SEED {index}/{len(data_seeds)} "
-            f"({data_seed}) ===",
-            flush=True,
-        )
+        print(f"\n=== DATA SEED {index}/{len(data_seeds)} ({data_seed}) ===", flush=True)
 
         df = run_one_seed(data_seed, config, output_dir)
 

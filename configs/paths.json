@@ -3,5 +3,9 @@
   "german_dir": "data/CooRTweet_dataset",
   "output_dir": "reports/T4_EDA_Pote_German",
   "seckin_dir": "data/Seckin",
-  "t8_output_dir": "reports/T8_EDA_Seckin"
+  "t8_output_dir": "reports/T8_EDA_Seckin",
+  "t6b_config": "configs/t6b.json",
+  "t6b_full_dir": "reports/t6b/full",
+  "t6b_pilot_dir": "reports/t6b/pilot",
+  "reference_dir": "references/time-aware-collaboration"
 }

@@ -19,15 +19,19 @@ import pandas as pd
 from time_aware_collaboration import models as reference_models
 from time_aware_collaboration import modularity as reference_modularity
 
-from scripts.run_t6b_experiment import (
-    CONFIG_PATH, GENERATORS, ROOT, SimulationConfig, generate_data, load_config, original_edge_list,
-)
+from scripts import run_t6b_experiment
+from scripts.run_t6b_experiment import CONFIG_PATH, GENERATORS, PATHS, ROOT, SimulationConfig, generate_data, load_config, original_edge_list
+from src.community import leiden, modularity
 from src.community.modularity import _leiden_modularity
+from src.eval import metrics as eval_metrics
 from src.graph import time_aware
+from src.simulation import synthetic
 
 
 GRAPH_BASELINE = "0db9c18812928b93507a122a0ee6275737cd3a03"
-HISTORY = ROOT / "reports" / "t6b" / "full"
+HISTORY = ROOT / PATHS["t6b_full_dir"]
+REFERENCE_ROOT = ROOT / PATHS["reference_dir"]
+TIME_AWARE_SOURCE = Path(time_aware.__file__).resolve().relative_to(ROOT).as_posix()
 EDGE_TOLERANCE = 1e-9
 RESULT_KEYS = ["data_seed", "community_seed", "pipeline", "configuration"]
 BETA_KEYS = ["data_seed", "simulation", "pipeline"]
@@ -41,14 +45,10 @@ def require(condition, message):
 
 def validate_result_keys(results, config):
     configurations = ["+".join(map(str, layers)) for layers in config["configurations"]]
-    expected = pd.MultiIndex.from_product(
-        [config["data_seeds"], config["community_seeds"], config["pipelines"], configurations],
-        names=RESULT_KEYS,
-    )
+    expected = pd.MultiIndex.from_product([config["data_seeds"], config["community_seeds"], config["pipelines"], configurations], names=RESULT_KEYS)
     actual = pd.MultiIndex.from_frame(results[RESULT_KEYS])
     require(expected.is_unique and actual.is_unique, "Duplicate T6b result or configuration key")
-    require(actual.sort_values().equals(expected.sort_values()),
-            "T6b results do not cover the configured Cartesian product")
+    require(actual.sort_values().equals(expected.sort_values()), "T6b results do not cover the configured Cartesian product")
 
 
 def read_archive(config, history):
@@ -56,65 +56,43 @@ def read_archive(config, history):
     validate_result_keys(results, config)
     betas = pd.read_csv(history / "betas_all.csv", dtype={"beta_reported": str})
     expected = set(product(config["data_seeds"], GENERATORS, config["pipelines"]))
-    require(
-        len(betas) == len(expected) == len(betas[BETA_KEYS].drop_duplicates())
-        and set(betas[BETA_KEYS].itertuples(index=False, name=None)) == expected,
-        "T6b beta archive has missing, duplicate or unexpected keys",
-    )
+    require(len(betas) == len(expected) == len(betas[BETA_KEYS].drop_duplicates()) and set(betas[BETA_KEYS].itertuples(index=False, name=None)) == expected, "T6b beta archive has missing, duplicate or unexpected keys")
 
-    for prefix, aggregate, keys, dtype in (
-        ("results", results, RESULT_KEYS, {"configuration": str}),
-        ("betas", betas, BETA_KEYS, {"beta_reported": str}),
-    ):
+    for prefix, aggregate, keys, dtype in (("results", results, RESULT_KEYS, {"configuration": str}), ("betas", betas, BETA_KEYS, {"beta_reported": str})):
         frames = []
         for seed in config["data_seeds"]:
             path = history / f"{prefix}_{seed}.csv"
             frame = pd.read_csv(path, dtype=dtype)
             require(frame["data_seed"].eq(seed).all(), f"Wrong data seed in {path.name}")
             frames.append(frame)
-        pd.testing.assert_frame_equal(
-            aggregate.set_index(keys).sort_index(),
-            pd.concat(frames, ignore_index=True).set_index(keys).sort_index(),
-            check_dtype=False, rtol=1e-13, atol=1e-15,
-        )
+        pd.testing.assert_frame_equal(aggregate.set_index(keys).sort_index(), pd.concat(frames, ignore_index=True).set_index(keys).sort_index(), check_dtype=False, rtol=1e-13, atol=1e-15)
 
-    require(results[config["metrics"]].apply(
-        lambda series: series.between(-1e-12, 1.0 + 1e-12).all()
-    ).all(), "Invalid T6b metrics")
+    require(results[config["metrics"]].apply(lambda series: series.between(-1e-12, 1.0 + 1e-12).all()).all(), "Invalid T6b metrics")
     community_counts = results["n_communities"]
-    require(community_counts.between(1, 46).all() and community_counts.mod(1).eq(0).all(),
-            "Invalid T6b community count")
+    require(community_counts.between(1, 46).all() and community_counts.mod(1).eq(0).all(), "Invalid T6b community count")
     require(betas["beta"].between(*config["beta_bounds"]).all(), "Beta out of bounds")
     student = betas[betas["pipeline"].eq("student")]
     original = betas[betas["pipeline"].eq("original_reference")]
     grid_steps = student["beta"] / config["beta_grid_step"]
     require(np.allclose(grid_steps, grid_steps.round(), rtol=0, atol=1e-10), "Beta off grid")
     on_boundary = student["beta"].eq(config["beta_bounds"][1])
-    require(student["upper_boundary"].eq(on_boundary).all()
-            and student["beta_reported"].eq(">=10").eq(on_boundary).all(),
-            "Student beta boundary flags disagree")
-    require(student["optimization_seed"].isna().all()
-            and student["mean_modularity"].between(-1.0, 1.0).all()
-            and original["mean_modularity"].isna().all()
-            and original["upper_boundary"].isna().all()
-            and original["optimization_seed"].eq(original["data_seed"] * 10 + original["simulation"]).all(),
-            "Beta optimization metadata disagree with the runner")
+    require(student["upper_boundary"].eq(on_boundary).all() and student["beta_reported"].eq(">=10").eq(on_boundary).all(), "Student beta boundary flags disagree")
+    student_ok = student["optimization_seed"].isna().all() and student["mean_modularity"].between(-1.0, 1.0).all()
+    original_ok = original["mean_modularity"].isna().all() and original["upper_boundary"].isna().all() and original["optimization_seed"].eq(original["data_seed"] * 10 + original["simulation"]).all()
+    require(student_ok and original_ok, "Beta optimization metadata disagree with the runner")
     for simulation in GENERATORS:
         column = f"beta_{simulation}"
         lookup = betas[betas["simulation"].eq(simulation)].set_index(["data_seed", "pipeline"])["beta"]
         joined = results.join(lookup.rename("expected_beta"), on=["data_seed", "pipeline"])
         selected = joined["configuration"].str.split("+").map(lambda layers: str(simulation) in layers)
-        require(joined.loc[~selected, column].isna().all() and np.allclose(
-            joined.loc[selected, column], joined.loc[selected, "expected_beta"], rtol=0, atol=1e-13,
-        ), f"Result beta does not match beta archive for simulation {simulation}")
+        beta_ok = np.allclose(joined.loc[selected, column], joined.loc[selected, "expected_beta"], rtol=0, atol=1e-13)
+        require(joined.loc[~selected, column].isna().all() and beta_ok, f"Result beta does not match beta archive for simulation {simulation}")
 
     return results, betas.set_index(BETA_KEYS).sort_index()
 
 
 def effective_results(results, metrics):
-    greedy = results["pipeline"].eq("original_reference") & ~results["configuration"].str.contains(
-        "+", regex=False
-    )
+    greedy = results["pipeline"].eq("original_reference") & ~results["configuration"].str.contains("+", regex=False)
     require(results["community_seed_effective"].eq(~greedy).all(), "Incorrect community seed effect flags")
     deterministic = results.loc[greedy].sort_values("community_seed")
     values = deterministic.groupby(GREEDY_KEY)[[*metrics, "n_communities"]].nunique(dropna=False)
@@ -133,9 +111,7 @@ def summarize_results(results, config):
         record = {
             "pipeline": pipeline,
             "configuration": configuration,
-            "n_archived_rows": len(results[
-                results["pipeline"].eq(pipeline) & results["configuration"].eq(configuration)
-            ]),
+            "n_archived_rows": len(results[results["pipeline"].eq(pipeline) & results["configuration"].eq(configuration)]),
             "n_effective_runs": len(group),
             "n_data_seeds": group["data_seed"].nunique(),
         }
@@ -185,10 +161,7 @@ def compare_weights(student, reference):
         "n_reference_edges": len(reference),
         "n_student_only": len(student.keys() - reference.keys()),
         "n_reference_only": len(reference.keys() - student.keys()),
-        "max_absolute_error": max(
-            (abs(student.get(edge, 0.0) - reference.get(edge, 0.0)) for edge in union),
-            default=0.0,
-        ),
+        "max_absolute_error": max((abs(student.get(edge, 0.0) - reference.get(edge, 0.0)) for edge in union), default=0.0),
     }
 
 
@@ -207,8 +180,8 @@ def diagnose(config, betas):
     # Load the known scalar T10 revision to compare its weighted pair inputs
     # with the working-tree vectorized implementation on each archived layer.
     baseline = ModuleType("time_aware_t10_baseline")
-    source = git("show", f"{GRAPH_BASELINE}:src/graph/time_aware.py")
-    exec(compile(source, f"{GRAPH_BASELINE}:src/graph/time_aware.py", "exec"), baseline.__dict__)
+    source = git("show", f"{GRAPH_BASELINE}:{TIME_AWARE_SOURCE}")
+    exec(compile(source, f"{GRAPH_BASELINE}:{TIME_AWARE_SOURCE}", "exec"), baseline.__dict__)
     counts, edge_checks, compatibility = [], [], []
     for seed in config["data_seeds"]:
         rounded, _, users = generate_data(seed)
@@ -221,25 +194,14 @@ def diagnose(config, betas):
             pairs = time_aware.prepare_action_pairs(events, None, keep_zero=False)
             scalar_pairs = baseline.prepare_action_pairs(events, None, keep_zero=False)
             edge_list = original_edge_list(events, users)
-            for role, beta in (
-                ("lower_bound", config["beta_bounds"][0]),
-                ("student_beta", student_beta["beta"]),
-                ("original_beta", original_beta["beta"]),
-                ("upper_bound", config["beta_bounds"][1]),
-            ):
-                edge_checks.append({
-                    **keys, "beta_role": role, "beta": beta,
-                    **check_edge_weights(pairs, users, edge_list, beta),
-                })
+            for role, beta in (("lower_bound", config["beta_bounds"][0]), ("student_beta", student_beta["beta"]), ("original_beta", original_beta["beta"]), ("upper_bound", config["beta_bounds"][1])):
+                edge_checks.append({**keys, "beta_role": role, "beta": beta, **check_edge_weights(pairs, users, edge_list, beta)})
 
             # Evaluate the objective at the saved beta only, using the node
             # order used by the grid search. The archived reference is unfiltered.
             student_graph = time_aware.build_layer_graph_from_pairs(pairs, users, student_beta["beta"])
             original_weights = reference_weights(edge_list, original_beta["beta"])
-            mean_q = math.fsum(
-                _leiden_modularity(student_graph, student_beta["beta"], community_seed)
-                for community_seed in config["community_seeds"]
-            ) / len(config["community_seeds"])
+            mean_q = math.fsum(_leiden_modularity(student_graph, student_beta["beta"], community_seed) for community_seed in config["community_seeds"]) / len(config["community_seeds"])
             compatibility.append({
                 **keys,
                 "scalar_pairs_equal": pairs.equals(scalar_pairs),
@@ -247,9 +209,7 @@ def diagnose(config, betas):
                 "student_edges_recomputed": student_graph.number_of_edges(),
                 "original_edges_archived": int(original_beta["n_edges"]),
                 "original_edges_recomputed": len(original_weights),
-                "original_edges_at_or_below_tolerance": sum(
-                    weight <= EDGE_TOLERANCE for weight in original_weights.values()
-                ),
+                "original_edges_at_or_below_tolerance": sum(weight <= EDGE_TOLERANCE for weight in original_weights.values()),
                 "student_mean_q_archived": student_beta["mean_modularity"],
                 "student_mean_q_recomputed": mean_q,
                 "student_mean_q_absolute_error": abs(mean_q - student_beta["mean_modularity"]),
@@ -271,43 +231,28 @@ def main():
     edges.to_csv(output / "u1_original_edge_weights.csv", index=False)
     compatibility.to_csv(output / "archive_graph_validation.csv", index=False)
     max_error = float(edges["max_absolute_error"].max())
-    require(edges[["n_student_only", "n_reference_only"]].eq(0).all().all()
-            and max_error < EDGE_TOLERANCE, "U1-original failed. Inspect u1_original_edge_weights.csv.")
-    require(compatibility["scalar_pairs_equal"].all()
-            and compatibility["student_edges_archived"].eq(compatibility["student_edges_recomputed"]).all()
-            and compatibility["original_edges_archived"].eq(compatibility["original_edges_recomputed"]).all()
-            and compatibility["student_mean_q_absolute_error"].lt(1e-12).all(),
-            "Archive graph validation failed. Inspect archive_graph_validation.csv.")
+    require(edges[["n_student_only", "n_reference_only"]].eq(0).all().all() and max_error < EDGE_TOLERANCE, "U1-original failed. Inspect u1_original_edge_weights.csv.")
+    edges_ok = compatibility["student_edges_archived"].eq(compatibility["student_edges_recomputed"]).all() and compatibility["original_edges_archived"].eq(compatibility["original_edges_recomputed"]).all()
+    require(compatibility["scalar_pairs_equal"].all() and edges_ok and compatibility["student_mean_q_absolute_error"].lt(1e-12).all(), "Archive graph validation failed. Inspect archive_graph_validation.csv.")
 
     summary, u4 = summarize_results(results, config)
     summary.to_csv(output / "summary_statistics.csv", index=False)
     u4.to_csv(output / "u4_distribution.csv", index=False)
-    fingerprinted = [
-        CONFIG_PATH, HISTORY / "results_all.csv", HISTORY / "betas_all.csv",
-        Path(__file__).resolve(), ROOT / "scripts" / "run_t6b_experiment.py",
-        ROOT / "src" / "simulation" / "synthetic.py", ROOT / "src" / "graph" / "time_aware.py",
-        ROOT / "src" / "community" / "modularity.py", ROOT / "src" / "community" / "leiden.py",
-        ROOT / "src" / "eval" / "metrics.py",
-    ]
-    reference_root = ROOT / "references" / "time-aware-collaboration"
+    source_modules = (run_t6b_experiment, synthetic, time_aware, modularity, leiden, eval_metrics)
+    fingerprinted = [CONFIG_PATH, HISTORY / "results_all.csv", HISTORY / "betas_all.csv", Path(__file__).resolve(), *(Path(module.__file__).resolve() for module in source_modules)]
     reference_source = {}
     for module in (reference_models, reference_modularity):
         active = Path(module.__file__)
-        vendored = reference_root / "time_aware_collaboration" / active.name
-        reference_source[active.name] = {
-            "sha256": sha256(active.read_bytes()).hexdigest(),
-            "matches_vendored_source": active.read_text(encoding="utf-8") == vendored.read_text(encoding="utf-8"),
-        }
+        vendored = REFERENCE_ROOT / "time_aware_collaboration" / active.name
+        reference_source[active.name] = {"sha256": sha256(active.read_bytes()).hexdigest(), "matches_vendored_source": active.read_text(encoding="utf-8") == vendored.read_text(encoding="utf-8")}
     metadata = {
         "project_head": git("rev-parse", "HEAD").decode().strip(),
         "baseline_graph_revision": GRAPH_BASELINE,
-        "reference_head": git("-C", str(reference_root), "rev-parse", "HEAD").decode().strip(),
+        "reference_head": git("-C", str(REFERENCE_ROOT), "rev-parse", "HEAD").decode().strip(),
         "reference_source": reference_source,
         "python": platform.python_version(),
         "platform": platform.platform(),
-        "packages": {name: version(name) for name in (
-            "numpy", "pandas", "networkx", "scipy", "igraph", "leidenalg", "scikit-learn", "pytest",
-        )},
+        "packages": {name: version(name) for name in ("numpy", "pandas", "networkx", "scipy", "igraph", "leidenalg", "scikit-learn", "pytest")},
         "sha256": {path.relative_to(ROOT).as_posix(): sha256(path.read_bytes()).hexdigest() for path in fingerprinted},
         "n_archived_rows": len(results),
         "n_archived_beta_rows": len(betas),
