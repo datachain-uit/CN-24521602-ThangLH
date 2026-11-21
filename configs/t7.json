@@ -1,0 +1,27 @@
+{
+    "experiment": "T7",
+    "review_date": "2026-11-15",
+    "note": "Batch theo checkpoint, không phải cập nhật tăng dần (C1 sau 30/11). beta chọn một lần mỗi (tau, lớp, biến thể) với seed = community_seeds[0]; 5 seed chỉ dùng cho Leiden.",
+    "community_seeds": [42, 43, 44, 45, 46],
+    "beta_bounds": [0.0, 10.0],
+    "brent_xatol": 1e-5,
+    "edge_tolerance": 1e-9,
+    "leiden": {"partition": "SurpriseVertexPartition", "layer_weights": "edge_count", "n_iterations": -1},
+    "ds1_layers": ["retweet", "hashtag", "mention", "url"],
+    "ds1_campaigns": ["Iran_5", "Catalonia"],
+    "control_min": 1,
+    "run_order": ["DS2", "Iran_5", "Catalonia"],
+    "priority_q": {"Catalonia": 0.25},
+    "q_values": [0.10, 0.25, 0.50, 1.00],
+    "b0_clusters": [2, 3],
+    "triv_tiebreak_seed": 42,
+    "t9_adapter": "src.eval.t7_checkpoints:infer_partition",
+    "ds2": {
+        "data_seeds": [20261108, 20261109, 20261110, 20261111, 20261112],
+        "configurations": {"L123": [1, 2, 3], "L3": [3]},
+        "t0_minutes": 1920,
+        "pre_t0_offsets_minutes": [1440, 60, 1]
+    },
+    "s2": {"repetitions": 2000, "n_inauthentic": 6, "n_authentic": 40, "author_wp": {"2": 0.52, "3": 0.36}, "tolerance_author": 0.02, "tolerance_standard": 0.01, "standard_reference": "E[WP] = pi + (1 - pi)(K - 1)/(N - 1)"},
+    "s3": {"min_coordinated": 2, "precision_threshold": 0.5}
+}

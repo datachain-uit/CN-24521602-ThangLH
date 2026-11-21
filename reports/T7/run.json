@@ -1,0 +1,658 @@
+{
+  "task": "T7",
+  "review": "2026-11-15 §6.6",
+  "started_utc": "2026-11-20T07:35:14+00:00",
+  "updated_utc": "2026-11-20T11:59:55+00:00",
+  "git_head": "193c582f1d67958c8cfd26a4b1da04189b695424",
+  "code_dirty": true,
+  "git_diff_sha256": "9e210a662ea32f84e6ce17751e23c56b55769dd6a84f6917d489722c91b9a11e",
+  "untracked_sha256": {
+    "configs/t7.json": "8f2eaa67b5aed428a5277a9de421f0c20d02b8d5a1fe78d05936632d7ecd0482",
+    "scripts/run_t7.py": "91d3d94411d39a184bc8714fad9e8f88ae36cd26342ebec459415227d7058eba",
+    "src/eval/seckin_protocol.py": "e08a09801428c51af9e156ef7afb4b180916cb5faf1c81067262ead92fe33571",
+    "src/eval/t7_checkpoints.py": "fbd53ed5da684137306e7ffb479f2d9fbd65b9d8adf75333935abcd63cb97f10",
+    "tests/test_seckin_protocol.py": "46028619d92e1f4198ba9aaf558691de60c133de11a46886b94df1a0373d0073",
+    "tests/test_t7.py": "fcc995a15dc386f48df28fd1a6d37507a6f2e94a48c30a0c19b13f2878518d69"
+  },
+  "packages": {
+    "numpy": "2.5.4",
+    "pandas": "3.1.1",
+    "networkx": "3.7",
+    "igraph": "1.0.0",
+    "leidenalg": "0.12.0",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.1",
+    "time-aware-collaboration": "0.1.0"
+  },
+  "args": {
+    "campaigns": [
+      "DS2",
+      "Iran_5",
+      "Catalonia"
+    ],
+    "max_checkpoints": null,
+    "seeds": [
+      42,
+      43,
+      44,
+      45,
+      46
+    ],
+    "output_dir": null
+  },
+  "config": {
+    "experiment": "T7",
+    "review_date": "2026-11-15",
+    "note": "Batch theo checkpoint, không phải cập nhật tăng dần (C1 sau 30/11). beta chọn một lần mỗi (tau, lớp, biến thể) với seed = community_seeds[0]; 5 seed chỉ dùng cho Leiden.",
+    "community_seeds": [
+      42,
+      43,
+      44,
+      45,
+      46
+    ],
+    "beta_bounds": [
+      0.0,
+      10.0
+    ],
+    "brent_xatol": 1e-05,
+    "edge_tolerance": 1e-09,
+    "leiden": {
+      "partition": "SurpriseVertexPartition",
+      "layer_weights": "edge_count",
+      "n_iterations": -1
+    },
+    "ds1_layers": [
+      "retweet",
+      "hashtag",
+      "mention",
+      "url"
+    ],
+    "ds1_campaigns": [
+      "Iran_5",
+      "Catalonia"
+    ],
+    "control_min": 1,
+    "run_order": [
+      "DS2",
+      "Iran_5",
+      "Catalonia"
+    ],
+    "priority_q": {
+      "Catalonia": 0.25
+    },
+    "q_values": [
+      0.1,
+      0.25,
+      0.5,
+      1.0
+    ],
+    "b0_clusters": [
+      2,
+      3
+    ],
+    "triv_tiebreak_seed": 42,
+    "ds2": {
+      "data_seeds": [
+        20261108,
+        20261109,
+        20261110,
+        20261111,
+        20261112
+      ],
+      "configurations": {
+        "L123": [
+          1,
+          2,
+          3
+        ],
+        "L3": [
+          3
+        ]
+      },
+      "t0_minutes": 1920,
+      "pre_t0_offsets_minutes": [
+        1440,
+        60,
+        1
+      ]
+    },
+    "s2": {
+      "repetitions": 2000,
+      "n_inauthentic": 6,
+      "n_authentic": 40,
+      "author_wp": {
+        "2": 0.52,
+        "3": 0.36
+      },
+      "tolerance_author": 0.02,
+      "tolerance_standard": 0.01,
+      "standard_reference": "E[WP] = pi + (1 - pi)(K - 1)/(N - 1)"
+    },
+    "s3": {
+      "min_coordinated": 2,
+      "precision_threshold": 0.5
+    }
+  },
+  "runtime_s_by_campaign": {
+    "DS2": 194.9,
+    "Iran_5": 2746.4,
+    "Catalonia": 12938.0
+  },
+  "beta_at_bound": [
+    {
+      "campaign": "Catalonia",
+      "layer": "retweet",
+      "variant": "B1_chuan",
+      "n_selected": 100,
+      "n_at_upper": 9,
+      "n_at_lower": 1
+    },
+    {
+      "campaign": "Catalonia",
+      "layer": "hashtag",
+      "variant": "B1_chuan",
+      "n_selected": 100,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "Catalonia",
+      "layer": "mention",
+      "variant": "B1_chuan",
+      "n_selected": 100,
+      "n_at_upper": 9,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "Catalonia",
+      "layer": "url",
+      "variant": "B1_chuan",
+      "n_selected": 100,
+      "n_at_upper": 24,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "Catalonia",
+      "layer": "retweet",
+      "variant": "B1_goc",
+      "n_selected": 100,
+      "n_at_upper": 13,
+      "n_at_lower": 2
+    },
+    {
+      "campaign": "Catalonia",
+      "layer": "hashtag",
+      "variant": "B1_goc",
+      "n_selected": 100,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "Catalonia",
+      "layer": "mention",
+      "variant": "B1_goc",
+      "n_selected": 100,
+      "n_at_upper": 4,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "Catalonia",
+      "layer": "url",
+      "variant": "B1_goc",
+      "n_selected": 100,
+      "n_at_upper": 20,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261108",
+      "layer": "sim1",
+      "variant": "B1_chuan",
+      "n_selected": 5,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261108",
+      "layer": "sim2",
+      "variant": "B1_chuan",
+      "n_selected": 5,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261108",
+      "layer": "sim3",
+      "variant": "B1_chuan",
+      "n_selected": 5,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261108",
+      "layer": "sim1",
+      "variant": "B1_goc",
+      "n_selected": 5,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261108",
+      "layer": "sim2",
+      "variant": "B1_goc",
+      "n_selected": 5,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261108",
+      "layer": "sim3",
+      "variant": "B1_goc",
+      "n_selected": 5,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261109",
+      "layer": "sim1",
+      "variant": "B1_chuan",
+      "n_selected": 6,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261109",
+      "layer": "sim2",
+      "variant": "B1_chuan",
+      "n_selected": 6,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261109",
+      "layer": "sim3",
+      "variant": "B1_chuan",
+      "n_selected": 6,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261109",
+      "layer": "sim1",
+      "variant": "B1_goc",
+      "n_selected": 6,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261109",
+      "layer": "sim2",
+      "variant": "B1_goc",
+      "n_selected": 6,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261109",
+      "layer": "sim3",
+      "variant": "B1_goc",
+      "n_selected": 6,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261110",
+      "layer": "sim1",
+      "variant": "B1_chuan",
+      "n_selected": 6,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261110",
+      "layer": "sim2",
+      "variant": "B1_chuan",
+      "n_selected": 6,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261110",
+      "layer": "sim3",
+      "variant": "B1_chuan",
+      "n_selected": 6,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261110",
+      "layer": "sim1",
+      "variant": "B1_goc",
+      "n_selected": 6,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261110",
+      "layer": "sim2",
+      "variant": "B1_goc",
+      "n_selected": 6,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261110",
+      "layer": "sim3",
+      "variant": "B1_goc",
+      "n_selected": 6,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261111",
+      "layer": "sim1",
+      "variant": "B1_chuan",
+      "n_selected": 7,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261111",
+      "layer": "sim2",
+      "variant": "B1_chuan",
+      "n_selected": 7,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261111",
+      "layer": "sim3",
+      "variant": "B1_chuan",
+      "n_selected": 7,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261111",
+      "layer": "sim1",
+      "variant": "B1_goc",
+      "n_selected": 7,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261111",
+      "layer": "sim2",
+      "variant": "B1_goc",
+      "n_selected": 7,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261111",
+      "layer": "sim3",
+      "variant": "B1_goc",
+      "n_selected": 7,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261112",
+      "layer": "sim1",
+      "variant": "B1_chuan",
+      "n_selected": 6,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261112",
+      "layer": "sim2",
+      "variant": "B1_chuan",
+      "n_selected": 6,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261112",
+      "layer": "sim3",
+      "variant": "B1_chuan",
+      "n_selected": 6,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261112",
+      "layer": "sim1",
+      "variant": "B1_goc",
+      "n_selected": 6,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261112",
+      "layer": "sim2",
+      "variant": "B1_goc",
+      "n_selected": 6,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L123_d20261112",
+      "layer": "sim3",
+      "variant": "B1_goc",
+      "n_selected": 6,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L3_d20261108",
+      "layer": "sim3",
+      "variant": "B1_chuan",
+      "n_selected": 4,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L3_d20261108",
+      "layer": "sim3",
+      "variant": "B1_goc",
+      "n_selected": 4,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L3_d20261109",
+      "layer": "sim3",
+      "variant": "B1_chuan",
+      "n_selected": 4,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L3_d20261109",
+      "layer": "sim3",
+      "variant": "B1_goc",
+      "n_selected": 4,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L3_d20261110",
+      "layer": "sim3",
+      "variant": "B1_chuan",
+      "n_selected": 4,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L3_d20261110",
+      "layer": "sim3",
+      "variant": "B1_goc",
+      "n_selected": 4,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L3_d20261111",
+      "layer": "sim3",
+      "variant": "B1_chuan",
+      "n_selected": 4,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L3_d20261111",
+      "layer": "sim3",
+      "variant": "B1_goc",
+      "n_selected": 4,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L3_d20261112",
+      "layer": "sim3",
+      "variant": "B1_chuan",
+      "n_selected": 4,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "DS2_L3_d20261112",
+      "layer": "sim3",
+      "variant": "B1_goc",
+      "n_selected": 4,
+      "n_at_upper": 0,
+      "n_at_lower": 0
+    },
+    {
+      "campaign": "Iran_5",
+      "layer": "retweet",
+      "variant": "B1_chuan",
+      "n_selected": 37,
+      "n_at_upper": 0,
+      "n_at_lower": 5
+    },
+    {
+      "campaign": "Iran_5",
+      "layer": "hashtag",
+      "variant": "B1_chuan",
+      "n_selected": 38,
+      "n_at_upper": 7,
+      "n_at_lower": 2
+    },
+    {
+      "campaign": "Iran_5",
+      "layer": "mention",
+      "variant": "B1_chuan",
+      "n_selected": 38,
+      "n_at_upper": 10,
+      "n_at_lower": 2
+    },
+    {
+      "campaign": "Iran_5",
+      "layer": "url",
+      "variant": "B1_chuan",
+      "n_selected": 38,
+      "n_at_upper": 0,
+      "n_at_lower": 5
+    },
+    {
+      "campaign": "Iran_5",
+      "layer": "retweet",
+      "variant": "B1_goc",
+      "n_selected": 37,
+      "n_at_upper": 0,
+      "n_at_lower": 5
+    },
+    {
+      "campaign": "Iran_5",
+      "layer": "hashtag",
+      "variant": "B1_goc",
+      "n_selected": 38,
+      "n_at_upper": 3,
+      "n_at_lower": 2
+    },
+    {
+      "campaign": "Iran_5",
+      "layer": "mention",
+      "variant": "B1_goc",
+      "n_selected": 38,
+      "n_at_upper": 16,
+      "n_at_lower": 2
+    },
+    {
+      "campaign": "Iran_5",
+      "layer": "url",
+      "variant": "B1_goc",
+      "n_selected": 38,
+      "n_at_upper": 0,
+      "n_at_lower": 4
+    }
+  ],
+  "ds2_ineligible_marks": [
+    {
+      "configuration": "L123",
+      "q": 0.1,
+      "n_marks": 5,
+      "n_ineligible": 4
+    },
+    {
+      "configuration": "L123",
+      "q": 0.25,
+      "n_marks": 5,
+      "n_ineligible": 1
+    },
+    {
+      "configuration": "L123",
+      "q": 0.5,
+      "n_marks": 5,
+      "n_ineligible": 0
+    },
+    {
+      "configuration": "L123",
+      "q": 1.0,
+      "n_marks": 5,
+      "n_ineligible": 0
+    },
+    {
+      "configuration": "L3",
+      "q": 0.1,
+      "n_marks": 5,
+      "n_ineligible": 5
+    },
+    {
+      "configuration": "L3",
+      "q": 0.25,
+      "n_marks": 5,
+      "n_ineligible": 5
+    },
+    {
+      "configuration": "L3",
+      "q": 0.5,
+      "n_marks": 5,
+      "n_ineligible": 5
+    },
+    {
+      "configuration": "L3",
+      "q": 1.0,
+      "n_marks": 5,
+      "n_ineligible": 0
+    }
+  ],
+  "notes": {
+    "scope": "Batch theo checkpoint, không phải cập nhật tăng dần (C1 bắt đầu sau 30/11).",
+    "layer_weights": "Phương án (c): đồ thị Brent/Leiden giữ ngưỡng edge_tolerance; layer_weights của Surprise = edges_author = số cặp tài khoản có chung nội dung trong lớp, đếm như get_time_damped_edge_list (models.py:283-315), giống nhau cho B1-gốc và B1-chuẩn.",
+    "zero_only_pairs": "Cặp tài khoản chỉ có Δt = 0: tác giả vẫn sinh cạnh trọng số 0 (ở B1-gốc); ta không tạo cạnh nhưng vẫn đếm cặp đó trong layer_weights.",
+    "beta": "beta chọn một lần mỗi (tau, lớp, biến thể) bằng Brent bounded như calculate_optimal_beta, Louvain networkx với random.Random(community_seeds[0]); 5 seed chỉ dùng cho Leiden.",
+    "runtime_s": "B1: ghép cặp tại tau chia đều cho 2 biến thể × số seed + (Brent + dựng đồ thị của biến thể) / số seed + Leiden của seed. B0: riêng từng seed. TRIV: thời gian 3 điểm số chia đều cho 7 dòng.",
+    "b0": "B0 = nhãn ngẫu nhiên đều K ∈ {2, 3} trên tập đánh giá. Với WP chuẩn, E[WP] = π + (1 − π)(K − 1)/(N − 1), π = N_IO/N (expected_random_wp); 0,52/0,36 của random_labeler tác giả là WP với p_k = recall của control (S2a).",
+    "s3_ds2": "Trên DS2, tài khoản phối hợp (coord_XX) không có sự kiện trước t0 = 1920 ở mọi seed, nên S3 là test chống rò rỉ tương lai, không kiểm khả năng phát hiện.",
+    "ds2_l3": "DS2 cấu hình L3 dùng find_partition_multiplex 1 lớp (Surprise), khác greedy_modularity của nhánh gốc T6b, nên không so trực tiếp với F1* = 0,533.",
+    "triv_zero_delta_ds2": "Trên DS2 (thời gian làm tròn giây, 0 cặp Δt = 0) điểm tỷ lệ Δt = 0 là hằng số; F1* tầm thường của điểm này chỉ còn phụ thuộc thứ tự phá hòa ngẫu nhiên (triv_tiebreak) và luôn >= 2N_IO/(N + N_IO) (k = N, gán tất cả là IO). Trước khi đổi bí danh ID, nó bằng đúng 2N_IO/(N + N_IO) vì auth_XX < coord_XX.",
+    "triv_tiebreak": "TRIV: trước khi gọi oracle_top_k (T9, không sửa), accountid được đổi thành bí danh theo hoán vị ngẫu nhiên với seed triv_tiebreak_seed, nên phá hòa không tương quan với nhãn qua thứ tự ID (trên DS2 auth_XX < coord_XX). Áp dụng cho cả DS1 và DS2; B0/B1 không đổi.",
+    "ds2_dedup_scores": "DS2: điểm (i) thời điểm xuất hiện và (ii) hành động/ngày bỏ sự kiện trùng hoàn toàn giữa các lớp (cùng tài khoản, thời điểm, action_type, content_id) vì phần authentic giống hệt nhau ở 3 lớp; điểm (iii) và đồ thị B1 giữ nguyên như T6b.",
+    "degenerate_no_io": "Khi N_IO = 0 (mốc trước t0 của DS2), sklearn và mã tác giả cho homogeneity = nmi = nmi50 = 1 (nhãn đúng chỉ có một lớp); giữ nguyên để nhất quán với U3. S3 chỉ đọc qua count_true_detections và F1*; khi tổng hợp luôn lọc eligible=True.",
+    "ineligible": "Mốc không đạt (≥ 5 IO và ≥ 5 control): mỗi method một dòng, eligible=False, chỉ số NaN, không chạy mô hình. Mốc trước t0 của DS2 vẫn chạy B0/B1, TRIV ghi NaN."
+  },
+  "results_csv": "t7_results.csv"
+}

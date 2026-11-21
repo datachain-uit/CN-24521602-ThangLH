@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import math
+import random
 
 import networkx as nx
 import pandas as pd
+from scipy.optimize import minimize_scalar
 
 from src.community.leiden import detect_communities_leiden
 from src.graph.time_aware import (
+    build_layer_edges_from_pairs,
     build_layer_graph,
     build_layer_graph_from_pairs,
     prepare_action_pairs,
@@ -136,3 +139,43 @@ def calculate_optimal_beta_grid_multi_seed(
         print("Optimal beta is at the upper boundary: beta >= 10", flush=True)
 
     return best_beta, best_q, pd.DataFrame.from_records(records)
+
+
+def _edge_graph(pairs: pd.DataFrame, beta: float, tolerance: float) -> nx.Graph:
+    """Đồ thị chỉ gồm cạnh (không thêm nút cô lập), thêm theo thứ tự (u, v) tăng dần như combinations(sorted users) của tác giả."""
+    edges = build_layer_edges_from_pairs(pairs, action_type=None, beta=beta)
+    graph = nx.Graph()
+    graph.add_weighted_edges_from((u, v, float(w)) for u, v, w in zip(edges["source_user"], edges["target_user"], edges["weight"]) if w > tolerance)
+    return graph
+
+
+def _louvain_modularity(graph: nx.Graph, rng: random.Random) -> float:
+    """Q như calculate_modularity của tác giả (modularity.py:10-40): Louvain networkx rồi modularity, cùng trọng số."""
+    if graph.number_of_edges() == 0:
+        return 0.0
+    communities = nx.community.louvain_communities(graph, weight="weight", seed=rng)
+    return float(nx.community.modularity(graph, communities, weight="weight"))
+
+
+def select_beta_brent(pairs: pd.DataFrame, tau, bounds: tuple[float, float], seed: int, tolerance: float = 1e-9) -> tuple[float, float, int]:
+    """Chọn beta bằng Brent có biên như calculate_optimal_beta của tác giả (modularity.py:68-94); trả (beta, Q, nfev).
+
+    pairs: bảng của prepare_action_pairs (dd = Δt phút / 1440) kèm cột t = thời điểm muộn hơn của cặp, đơn vị phút.
+    Một RNG random.Random(seed) dùng xuyên suốt mọi lần gọi Louvain, tương đương random.seed(seed) trước mã gốc.
+    Lớp không có cặp: trả (nan, nan, 0) và không gọi Louvain.
+    """
+    from src.eval.t7_checkpoints import assert_not_future, tau_minutes  # import muộn để tránh vòng import với t7_checkpoints
+    if "t" not in pairs.columns:
+        raise ValueError("pairs cần cột t (thời điểm muộn hơn của cặp, phút) để kiểm U2.")
+    assert_not_future(pairs["t"], tau_minutes(tau), "select_beta_brent")
+    if (pairs["dd"] < 0).any():
+        raise ValueError("Có Δt âm: cặp không theo quy ước T10.")
+    if pairs.empty:
+        return float("nan"), float("nan"), 0
+    rng = random.Random(seed)
+
+    def objective(beta):
+        return -_louvain_modularity(_edge_graph(pairs, beta, tolerance), rng)
+
+    result = minimize_scalar(objective, bounds=bounds, method="bounded")
+    return float(result.x), float(-result.fun), int(result.nfev)

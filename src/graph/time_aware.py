@@ -87,12 +87,13 @@ def find_next_action_pairs(events: pd.DataFrame, keep_zero: bool = True) -> pd.D
     return pd.DataFrame(records)
 
 
-def prepare_action_pairs(events: pd.DataFrame, action_type: str | None, keep_zero: bool = True) -> pd.DataFrame:
+def prepare_action_pairs(events: pd.DataFrame, action_type: str | None, keep_zero: bool = True, with_time: bool = False) -> pd.DataFrame:
+    """with_time=True thêm cột t = thời điểm hành động đích của cặp (muộn hơn, cùng đơn vị với timestamp) để kiểm U2."""
     layer = events if action_type is None else events.loc[events["action_type"] == action_type]
     pairs = find_next_action_pairs(layer, keep_zero=keep_zero)
 
     if pairs.empty:
-        return pd.DataFrame(columns=PAIR_COLUMNS)
+        return pd.DataFrame(columns=[*PAIR_COLUMNS, "t"] if with_time else PAIR_COLUMNS)
 
     counts = count_content_users(layer)
 
@@ -104,12 +105,15 @@ def prepare_action_pairs(events: pd.DataFrame, action_type: str | None, keep_zer
     source = pairs["source_user"]
     target = pairs["target_user"]
     canonical = source < target
-    return pd.DataFrame({
+    result = pd.DataFrame({
         "u": source.where(canonical, target),
         "v": target.where(canonical, source),
         "dd": pairs["delta_t"].to_numpy(dtype=np.float64) / 1440.0,
         "w0": 1.0 / (pairs["n_users"].to_numpy(dtype=np.float64) - 1.0),
     })
+    if with_time:
+        result["t"] = pairs["target_time"].to_numpy(dtype=np.float64)
+    return result
 
 
 def build_layer_edges_from_pairs(pairs: pd.DataFrame, action_type: str | None, beta: float) -> pd.DataFrame:
