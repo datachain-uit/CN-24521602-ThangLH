@@ -4,8 +4,12 @@
   "output_dir": "reports/T4_EDA_Pote_German",
   "seckin_dir": "data/Seckin",
   "t8_output_dir": "reports/T8_EDA_Seckin",
+  "t9_output_dir": "reports/T9_EDA_Seckin",  "t10_runs_dir": "reports/T8_EDA_Seckin/T10_runs",
+  "t9_config": "configs/t9.json",
   "t6b_config": "configs/t6b.json",
   "t6b_full_dir": "reports/t6b/full",
   "t6b_pilot_dir": "reports/t6b/pilot",
-  "reference_dir": "references/time-aware-collaboration"
+  "reference_dir": "references/time-aware-collaboration",
+  "t7_config": "configs/t7.json",
+  "t7_output_dir": "reports/T7"
 }

@@ -1,0 +1,6 @@
+{
+    "experiment": "T9",
+    "note": "seeds: Leiden và xáo trộn S1 ở P6, mỗi seed một lần chạy cho từng mốc và biến thể. bootstrap_seed: CI bootstrap theo đợt ở P4b. β trong adapter T7 chọn với community_seeds[0] của configs/t7.json.",
+    "seeds": [42, 43, 44, 45, 46],
+    "bootstrap_seed": 42
+}
