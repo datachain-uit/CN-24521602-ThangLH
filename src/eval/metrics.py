@@ -105,7 +105,19 @@ def partition_metrics(partition: list[set[str]], population: set[str], ground_tr
     truth = ground_truth & population
     f1, precision, recall = best_cluster_scores(restricted, truth)
     nmi, nmi50 = clustering_nmi(restricted, truth)
-    return dict(f1_star=f1, precision_star=precision, recall_star=recall, wp=weighted_precision(restricted, truth), homogeneity=clustering_homogeneity(restricted, truth), nmi=nmi, nmi50=nmi50)
+    return dict(f1_star=f1, precision_star=precision, recall_star=recall, wp=weighted_precision(restricted, truth), homogeneity=clustering_homogeneity(restricted, truth), nmi=nmi, nmi50=nmi50, **cluster_counts(restricted, truth))
+
+
+def cluster_counts(restricted: list[set[str]], truth: set[str]) -> dict:
+    """Đếm cụm trên phân hoạch ĐÃ giới hạn vào tập đánh giá (Review-2026-11-21 §3.4, §6.3).
+
+    n_clusters_ge2: số cụm có >= 2 tài khoản; n_io_clusters_ge2: trong số đó, số cụm có >= 1 IO;
+    largest_io_cluster_share: số IO của cụm chứa nhiều IO nhất (xét MỌI cụm, kể cả cụm 1 tài khoản, như F1*) / tổng IO; NaN khi không có IO.
+    """
+    large = [community for community in restricted if len(community) >= 2]
+    n_io = len(truth)
+    largest = max((len(community & truth) for community in restricted), default=0)
+    return dict(n_clusters_ge2=len(large), n_io_clusters_ge2=sum(1 for community in large if community & truth), largest_io_cluster_share=largest / n_io if n_io else float("nan"))
 
 
 def expected_random_wp(n_io: int, n_ctrl: int, n_clusters: int) -> float:

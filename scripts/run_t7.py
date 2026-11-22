@@ -163,8 +163,39 @@ def parse_args(argv, cfg):
     parser.add_argument("--campaigns", nargs="+", default=cfg["run_order"], help="Chiến dịch theo thứ tự chạy, mặc định run_order trong configs/t7.json.")
     parser.add_argument("--max-checkpoints", type=int, default=None, help="Giới hạn số mốc mỗi chiến dịch (sau khi sắp ưu tiên).")
     parser.add_argument("--seeds", nargs="+", type=int, default=cfg["community_seeds"], help="Seed Leiden và B0, mặc định community_seeds.")
+    parser.add_argument("--save-partitions", action="store_true", help="Lưu phân hoạch B0/B1 (toàn bộ nút được phân hoạch, cột in_eval) ra parquet trong partitions_dir của configs/paths.json (thư mục bị .gitignore chặn); mặc định tắt.")
     parser.add_argument("--output-dir", default=None, help="Thư mục ghi CSV và run.json (chạy thử); mặc định t7_output_dir trong configs/paths.json.")
     return parser.parse_args(argv)
+
+
+PARTITION_COLUMNS = ["campaign", "episode", "q", "tau", "method", "seed", "accountid", "cluster", "in_eval"]
+
+
+def partition_path(directory, base):
+    """Một parquet mỗi (campaign, episode, q); tau thêm vào tên để các mốc trước t0 của DS2 (q = NaN) không trùng."""
+    _, episode, q, tau, _, _ = result_key({**base, "method": "", "seed": float("nan")})
+    return Path(directory) / str(base["campaign"]) / f"episode{episode}_q{q}_tau{tau.replace(':', '')}.parquet"
+
+
+def check_ignored(directory):
+    """Dừng nếu partitions_dir không bị .gitignore chặn (git check-ignore, chỉ đọc)."""
+    probe = Path(directory) / "probe.parquet"
+    ignored = subprocess.run(["git", "check-ignore", "-q", str(probe.relative_to(ROOT) if probe.is_relative_to(ROOT) else probe)], cwd=ROOT, capture_output=True, check=False).returncode == 0
+    if not ignored:
+        raise RuntimeError("partitions_dir không bị .gitignore chặn; không lưu phân hoạch.")
+
+
+def partition_writer(directory):
+    """Trả partition_fn cho iter_campaign_rows: ghi parquet của một mốc; nếu tệp đã có (resume) thì gộp, dòng mới thay dòng cũ cùng (method, seed, accountid). Không in accountid."""
+    def write(base, records):
+        path = partition_path(directory, base)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        frame = pd.DataFrame(records).assign(campaign=base["campaign"], episode=int(base["episode"]), q=float(base["q"]), tau=format_tau(base["tau"]))
+        frame = frame.assign(seed=frame["seed"].astype(int), accountid=frame["accountid"].astype(str), cluster=frame["cluster"].astype(int), in_eval=frame["in_eval"].astype(bool))[PARTITION_COLUMNS]
+        if path.is_file():
+            frame = pd.concat([pd.read_parquet(path), frame], ignore_index=True).drop_duplicates(["method", "seed", "accountid"], keep="last")
+        frame.to_parquet(path, index=False)
+    return write
 
 
 def resolve_output_dir(args, paths):
@@ -184,6 +215,12 @@ def main(argv=None):
     done = read_done_keys(csv_path)
     started_utc = datetime.now(timezone.utc).isoformat(timespec="seconds")
     print(f"Kết quả: {csv_path} ({len(done)} dòng đã có).", flush=True)
+    partition_fn = None
+    if args.save_partitions:
+        partitions_dir = ROOT / paths["partitions_dir"]
+        check_ignored(partitions_dir)
+        partition_fn = partition_writer(partitions_dir)
+        print(f"Lưu phân hoạch vào {paths['partitions_dir']}.", flush=True)
     for campaign in args.campaigns:
         clock = perf_counter()
         if campaign == "DS2":
@@ -194,7 +231,7 @@ def main(argv=None):
         written = 0
         for name, stream, marks, events_fn, layers, trivial_fn in jobs:
             marks = marks if args.max_checkpoints is None else marks.head(args.max_checkpoints)
-            for row in iter_campaign_rows(stream, marks, events_fn, name, cfg, layers, args.seeds, done=done, trivial_fn=trivial_fn, progress=lambda text: print(text, flush=True)):
+            for row in iter_campaign_rows(stream, marks, events_fn, name, cfg, layers, args.seeds, done=done, trivial_fn=trivial_fn, progress=lambda text: print(text, flush=True), partition_fn=partition_fn):
                 append_result(csv_path, row)
                 done.add(result_key(row))
                 written += 1

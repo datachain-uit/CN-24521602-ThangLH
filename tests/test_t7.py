@@ -17,7 +17,7 @@ from time_aware_collaboration.models import get_time_damped_edge_list  # noqa: F
 from src.community import modularity
 from src.eval import t7_checkpoints
 from src.community.modularity import select_beta_brent
-from src.eval.metrics import expected_random_wp, partition_metrics
+from src.eval.metrics import best_cluster_scores, cluster_counts, expected_random_wp, partition_metrics
 from pathlib import Path
 
 from src.eval.seckin_protocol import EpisodeRules, daily_coverage, evaluate_ablations, harmonize_time, make_checkpoints, make_episodes, observed_at, oracle_top_k, baseline_scores
@@ -328,11 +328,15 @@ def author_inline_scores(community_dict, inauthentic):
     return dict(f1_star=best_f1, precision_star=best_p, recall_star=best_r, wp=q, homogeneity=homogeneity_score(gt_labels, comm_labels), nmi=normalized_mutual_info_score(gt_labels, comm_labels), nmi50=normalized_mutual_info_score(gt_labels, comm_share_labels))
 
 
+NEW_CLUSTER_KEYS = {"n_clusters_ge2", "n_io_clusters_ge2", "largest_io_cluster_share"}
+OLD_METRICS = ["f1_star", "precision_star", "recall_star", "wp", "homogeneity", "nmi", "nmi50"]
+
+
 def assert_u3(partition, population, truth):
     restricted = [c & population for c in partition if c & population]
     ref = author_inline_scores({node: i for i, c in enumerate(restricted) for node in c}, list(truth & population))
     ours = partition_metrics(partition, population, truth)
-    assert ours.keys() == ref.keys()
+    assert ours.keys() == ref.keys() | NEW_CLUSTER_KEYS
     for key in ref:
         assert abs(ours[key] - ref[key]) < 1e-9, (key, ours[key], ref[key])
     return ours
@@ -562,7 +566,7 @@ def test_trivial_rows_dao_dong_tren_fixture_t9(campaign):
 # --- Phần 8: vòng lặp, schema CSV và append ---
 CFG = load_config()
 SEEDS = (42, 43)
-EXPECTED_COLUMNS = ["campaign", "episode", "q", "tau", "method", "seed", "n_io", "n_ctrl", "eligible", "f1_star", "precision_star", "recall_star", "wp", "homogeneity", "nmi", "nmi50", "runtime_s", "beta_retweet", "beta_hashtag", "beta_mention", "beta_url", "beta_sim1", "beta_sim2", "beta_sim3"]
+EXPECTED_COLUMNS = ["campaign", "episode", "q", "tau", "method", "seed", "n_io", "n_ctrl", "eligible", "f1_star", "precision_star", "recall_star", "wp", "homogeneity", "nmi", "nmi50", "runtime_s", "beta_retweet", "beta_hashtag", "beta_mention", "beta_url", "beta_sim1", "beta_sim2", "beta_sim3", "n_clusters_ge2", "n_io_clusters_ge2", "largest_io_cluster_share"]
 
 
 def ds1_marks(campaign):
@@ -581,7 +585,7 @@ def write_csv(path, rows):
         append_result(path, row)
 
 
-def test_schema_24_cot_dung_thu_tu_va_khong_co_accountid(campaign, tmp_path):
+def test_schema_27_cot_dung_thu_tu_va_khong_co_accountid(campaign, tmp_path):
     stream, marks = ds1_marks(campaign)
     path = tmp_path / "t7_results.csv"
     write_csv(path, run_rows(stream, marks))
@@ -840,3 +844,83 @@ def test_output_dir_va_bang_moc_ds2(ds2_data, tmp_path):
     table = {row["q"]: row for row in run_t7.ds2_ineligible_table(path)}
     assert set(table) == set(CFG["q_values"]) and all(row["configuration"] == "L3" and row["n_marks"] == 1 for row in table.values())
     assert [table[q]["n_ineligible"] for q in sorted(table)] == [int(not mark.eligible) for mark in marks.loc[~marks.pre_t0].sort_values("q").itertuples()]
+
+
+# --- Số cụm (Review-2026-11-21 §3.4, §6.3) và lưu phân hoạch ---
+def test_cluster_counts_phan_hoach_dung_tay():
+    population = {"i1", "i2", "i3", "i4", "c1", "c2", "c3", "c4", "c5"}
+    truth = {"i1", "i2", "i3", "i4", "outside"}
+    partition = [{"i1", "i2", "c1"}, {"i3"}, {"c2", "c3"}, {"i4", "c4", "x_out"}, {"c5"}, {"y_out", "z_out"}]
+    ours = partition_metrics(partition, population, truth)
+    assert ours["n_clusters_ge2"] == 3 and ours["n_io_clusters_ge2"] == 2 and ours["largest_io_cluster_share"] == pytest.approx(2 / 4)
+    assert cluster_counts([{"a"}, {"b"}, {"c"}], {"a"}) == dict(n_clusters_ge2=0, n_io_clusters_ge2=0, largest_io_cluster_share=1.0)
+    assert cluster_counts([{"a", "b"}, {"i"}], {"i"})["n_io_clusters_ge2"] == 0
+    assert np.isnan(cluster_counts([{"a", "b"}], set())["largest_io_cluster_share"])
+
+
+def test_cum_mot_tai_khoan_khong_tinh_va_chi_so_cu_khong_doi():
+    population, truth = {"i1", "i2", "c1", "c2"}, {"i1", "i2"}
+    split = [{"i1"}, {"i2"}, {"c1"}, {"c2"}]
+    assert partition_metrics(split, population, truth)["n_clusters_ge2"] == 0
+    merged = [{"i1", "i2"}, {"c1"}, {"c2"}]
+    out = partition_metrics(merged, population, truth)
+    assert out["n_clusters_ge2"] == 1 and out["n_io_clusters_ge2"] == 1 and out["largest_io_cluster_share"] == 1.0
+    restricted = [c & population for c in merged if c & population]
+    f1, precision, recall = best_cluster_scores(restricted, truth)
+    assert (out["f1_star"], out["precision_star"], out["recall_star"]) == (f1, precision, recall)
+
+
+def test_partition_fn_khong_doi_dong_ket_qua_va_ghi_du_nut(campaign, tmp_path):
+    stream, marks = ds1_marks(campaign)
+    events_fn = lambda history: build_events(history[MODEL_COLUMNS], tuple(CFG["ds1_layers"]))  # noqa: E731
+    saved = []
+    rows = list(iter_campaign_rows(stream, marks, events_fn, "test", CFG, CFG["ds1_layers"], SEEDS, progress=lambda _: None, partition_fn=lambda base, records: saved.append((base, records))))
+    plain = run_rows(stream, marks)
+    assert_frame_equal(pd.DataFrame(rows).drop(columns="runtime_s"), pd.DataFrame(plain).drop(columns="runtime_s"))
+    assert len(saved) == int(marks.eligible.sum()) and saved
+    for base, records in saved:
+        frame = pd.DataFrame(records)
+        history, current = observe(stream, base["tau"], base["episode"])
+        assert set(frame.method) == {"B0_K2", "B0_K3", "B1_goc", "B1_chuan"} and set(frame.seed) == set(SEEDS)
+        for (method, seed), part in frame.groupby(["method", "seed"]):
+            assert not part.accountid.duplicated().any()
+            expected = set(current.accountid) if method.startswith("B0") else set(history.accountid)
+            assert set(part.accountid) == expected and part.in_eval.eq(part.accountid.isin(set(current.accountid))).all()
+            restricted = [set(g.accountid) for _, g in part.loc[part.in_eval].groupby("cluster")]
+            row = next(r for r in rows if r["method"] == method and r["seed"] == seed and r["episode"] == base["episode"] and r["q"] == base["q"])
+            truth = set(current.loc[~current.is_control, "accountid"])
+            assert cluster_counts(restricted, truth)["n_clusters_ge2"] == row["n_clusters_ge2"]
+    write = run_t7.partition_writer(tmp_path)
+    base, records = saved[0]
+    write(base, records)
+    write(base, records[: len(records) // 2])
+    stored = pd.read_parquet(run_t7.partition_path(tmp_path, base))
+    assert list(stored.columns) == run_t7.PARTITION_COLUMNS and len(stored) == len(records) and stored.in_eval.dtype == bool
+
+
+def test_partitions_dir_bi_gitignore_chan():
+    paths = __import__("json").loads((run_t7.ROOT / "configs" / "paths.json").read_text(encoding="utf-8"))
+    run_t7.check_ignored(run_t7.ROOT / paths["partitions_dir"])
+    with pytest.raises(RuntimeError):
+        run_t7.check_ignored(run_t7.ROOT / "src")
+
+
+def test_catalonia_mot_moc_mot_seed_trung_t7_results():
+    paths = __import__("json").loads((run_t7.ROOT / "configs" / "paths.json").read_text(encoding="utf-8"))
+    results = run_t7.ROOT / paths["t7_output_dir"] / "t7_results.csv"
+    source = run_t7.ROOT / paths["seckin_dir"]
+    if not results.is_file() or not source.is_dir() or not any(source.glob("Catalonia*.parquet")):
+        pytest.skip("Thiếu dữ liệu Seckin cục bộ hoặc reports/T7/t7_results.csv.")
+    stream, marks = run_t7.load_ds1("Catalonia", CFG, paths)
+    eligible = marks.loc[marks.eligible & np.isclose(marks.q, 0.25)]
+    mark = eligible.assign(size=eligible.n_io + eligible.n_ctrl).sort_values(["size", "episode"]).head(1).drop(columns="size")
+    events_fn = lambda history: build_events(history[MODEL_COLUMNS], tuple(CFG["ds1_layers"]))  # noqa: E731
+    triv_done = {result_key(dict(campaign="Catalonia", episode=mark.episode.iloc[0], q=0.25, tau=mark.tau.iloc[0], method=method, seed=float("nan"))) for method in TRIV_METHODS}
+    rows = pd.DataFrame(iter_campaign_rows(stream, mark, events_fn, "Catalonia", CFG, CFG["ds1_layers"], (42,), done=triv_done, progress=lambda _: None))
+    stored = pd.read_csv(results)
+    stored = stored.loc[stored.campaign.eq("Catalonia") & stored.episode.eq(mark.episode.iloc[0]) & np.isclose(stored.q, 0.25) & stored.seed.eq(42)].set_index("method")
+    assert sorted(rows.method) == ["B0_K2", "B0_K3", "B1_chuan", "B1_goc"] and set(rows.method) <= set(stored.index)
+    for row in rows.to_dict("records"):
+        for metric in OLD_METRICS:
+            assert abs(row[metric] - stored.loc[row["method"], metric]) < 1e-12, (row["method"], metric)
+        assert row["n_clusters_ge2"] >= row["n_io_clusters_ge2"] >= 0 and 0 < row["largest_io_cluster_share"] <= 1

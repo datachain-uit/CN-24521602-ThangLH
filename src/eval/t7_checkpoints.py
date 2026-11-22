@@ -176,7 +176,7 @@ def _rows_from_scores(scores, labels, tiebreak_seed):
 
 
 # --- Phần 8: vòng lặp đợt × mốc × method × seed và CSV dạng dài ---
-RESULT_COLUMNS = ["campaign", "episode", "q", "tau", "method", "seed", "n_io", "n_ctrl", "eligible", "f1_star", "precision_star", "recall_star", "wp", "homogeneity", "nmi", "nmi50", "runtime_s", "beta_retweet", "beta_hashtag", "beta_mention", "beta_url", "beta_sim1", "beta_sim2", "beta_sim3"]
+RESULT_COLUMNS = ["campaign", "episode", "q", "tau", "method", "seed", "n_io", "n_ctrl", "eligible", "f1_star", "precision_star", "recall_star", "wp", "homogeneity", "nmi", "nmi50", "runtime_s", "beta_retweet", "beta_hashtag", "beta_mention", "beta_url", "beta_sim1", "beta_sim2", "beta_sim3", "n_clusters_ge2", "n_io_clusters_ge2", "largest_io_cluster_share"]
 KEY_COLUMNS = ["campaign", "episode", "q", "tau", "method", "seed"]
 B1_VARIANTS = (("B1_goc", False), ("B1_chuan", True))
 TRIV_METHODS = [f"TRIV_{score}_{direction}" for score in ("first_seen", "actions_per_active_day", "zero_delta_repost") for direction in ("high", "low")] + ["TRIV_best"]
@@ -222,7 +222,7 @@ def read_done_keys(path):
         return set()
     frame = pd.read_csv(path, dtype=str, keep_default_na=False)
     if list(frame.columns) != RESULT_COLUMNS:
-        raise ValueError(f"{path} không đúng schema 24 cột của T7.")
+        raise ValueError(f"{path} không đúng schema {len(RESULT_COLUMNS)} cột của T7.")
     return {result_key(row) for row in frame[KEY_COLUMNS].to_dict("records")}
 
 
@@ -235,7 +235,7 @@ def _cell(column, value):
 
 
 def append_result(path, row):
-    """Ghi một dòng đúng 24 cột (không cột thừa) rồi flush ngay để dừng giữa chừng không mất dữ liệu."""
+    """Ghi một dòng đúng RESULT_COLUMNS (27 cột) (không cột thừa) rồi flush ngay để dừng giữa chừng không mất dữ liệu."""
     if set(row) != set(RESULT_COLUMNS):
         raise ValueError(f"Dòng kết quả sai schema: thừa {set(row) - set(RESULT_COLUMNS)}, thiếu {set(RESULT_COLUMNS) - set(row)}.")
     path = Path(path)
@@ -257,12 +257,13 @@ def _row(base, method, seed, metrics=None, runtime=float("nan"), betas=None):
     return row
 
 
-def iter_campaign_rows(stream, marks, events_fn, campaign, cfg, layers, seeds, done=frozenset(), trivial_fn=trivial_rows, time_col="t_min", progress=print):
+def iter_campaign_rows(stream, marks, events_fn, campaign, cfg, layers, seeds, done=frozenset(), trivial_fn=trivial_rows, time_col="t_min", progress=print, partition_fn=None):
     """Sinh từng dòng kết quả của một chiến dịch theo thứ tự marks; bỏ qua khóa đã có trong done.
 
     marks: episode, q, tau, n_io, n_ctrl, eligible và tùy chọn pre_t0 (mốc trước t0 của DS2: chạy B0/B1 để kiểm S3, TRIV ghi NaN).
     Mốc không đạt (không phải pre_t0): mỗi method một dòng, seed NaN, chỉ số NaN, không chạy mô hình.
     Suy luận chỉ dùng D(tau); nhãn (is_control) chỉ dùng cho tập đánh giá và chấm điểm.
+    partition_fn(base, records) (tùy chọn, mặc định None): gọi một lần mỗi mốc đạt với danh sách dict(method, seed, accountid, cluster, in_eval) của B0/B1 trên toàn bộ nút được phân hoạch (B1: mọi tài khoản của D(tau); B0: tập đánh giá), để lưu phân hoạch; không ảnh hưởng chỉ số.
     runtime_s của B1 = ghép cặp tại tau chia đều cho 2 biến thể × len(seeds) + (Brent + dựng đồ thị của biến thể) / len(seeds) + Leiden của seed đó.
     """
     bounds, beta_seed = tuple(cfg["beta_bounds"]), cfg["community_seeds"][0]
@@ -285,11 +286,15 @@ def iter_campaign_rows(stream, marks, events_fn, campaign, cfg, layers, seeds, d
         nodes = sorted(history["accountid"].unique())
         population = set(current["accountid"])
         truth = set(current.loc[~current["is_control"], "accountid"])
+        records = []
+        keep = (lambda method, seed, partition: records.extend(dict(method=method, seed=seed, accountid=node, cluster=index, in_eval=node in population) for index, community in enumerate(partition) for node in sorted(community))) if partition_fn is not None else (lambda *_: None)
         for method, seed in todo:
             if method in b0_methods:
                 clock = perf_counter()
-                metrics = partition_metrics(random_partition(population, int(method.rsplit("K", 1)[1]), seed), population, truth)
-                yield _row(base, method, seed, metrics, perf_counter() - clock)
+                partition = random_partition(population, int(method.rsplit("K", 1)[1]), seed)
+                row = _row(base, method, seed, partition_metrics(partition, population, truth), perf_counter() - clock)
+                keep(method, seed, partition)
+                yield row
         b1_todo = [(method, seed) for method, seed in todo if method.startswith("B1_")]
         if b1_todo:
             clock = perf_counter()
@@ -306,8 +311,12 @@ def iter_campaign_rows(stream, marks, events_fn, campaign, cfg, layers, seeds, d
                 weights = [info[layer]["edges_author"] for layer in layers]
                 for seed in variant_seeds:
                     clock = perf_counter()
-                    metrics = partition_metrics(leiden_multiplex(graphs, nodes, seed, weights), population, truth)
-                    yield _row(base, method, seed, metrics, pair_s / (len(B1_VARIANTS) * len(seeds)) + build_s / len(seeds) + perf_counter() - clock, betas)
+                    partition = leiden_multiplex(graphs, nodes, seed, weights)
+                    row = _row(base, method, seed, partition_metrics(partition, population, truth), pair_s / (len(B1_VARIANTS) * len(seeds)) + build_s / len(seeds) + perf_counter() - clock, betas)
+                    keep(method, seed, partition)
+                    yield row
+        if partition_fn is not None and records:
+            partition_fn(base, records)
         triv_todo = {method for method, _ in todo if method.startswith("TRIV_")}
         if triv_todo and base["eligible"]:
             clock = perf_counter()

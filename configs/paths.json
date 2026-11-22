@@ -11,5 +11,8 @@
   "t6b_pilot_dir": "reports/t6b/pilot",
   "reference_dir": "references/time-aware-collaboration",
   "t7_config": "configs/t7.json",
-  "t7_output_dir": "reports/T7"
+  "t7_output_dir": "reports/T7",
+  "t12_config": "configs/t12.json",
+  "t12_output_dir": "reports/T12",
+  "partitions_dir": "data/partitions"
 }
