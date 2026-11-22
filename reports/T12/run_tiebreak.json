@@ -1,0 +1,152 @@
+{
+  "task": "T12-tiebreak",
+  "started_utc": "2026-11-22T08:47:21+00:00",
+  "updated_utc": "2026-11-22T08:48:00+00:00",
+  "runtime_s": 39.0,
+  "git_head": "01ed5db6ab22875e9ee6d3eeca9597db6047b9e2",
+  "code_dirty": false,
+  "git_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "untracked_sha256": {},
+  "packages": {
+    "numpy": "2.5.4",
+    "pandas": "3.1.1",
+    "networkx": "3.7",
+    "igraph": "1.0.0",
+    "leidenalg": "0.12.0",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.1",
+    "time-aware-collaboration": "0.1.0"
+  },
+  "inputs": {
+    "t7_results": {
+      "path": "reports/T7/t7_results.csv",
+      "sha256": "49c281e7ce412f8058c17d52e9cbc8ae6ba3a0ffa9b8ae8316ef94d1a650f63e"
+    },
+    "per_episode": {
+      "path": "reports/T12/t12_per_episode.csv",
+      "sha256": "4aa30fc2d7549baab3bcb57b3b4f108e87192d833e56e81487f3119eae6e2122"
+    },
+    "compare": {
+      "path": "reports/T12/t12_compare.csv",
+      "sha256": "443e3ab7d9a4f2cce9c4dec1aae7bc40822f24aaf8b76a01417d02716fb609a0"
+    },
+    "loco_choice": {
+      "path": "reports/T12/t12_loco_choice.csv",
+      "sha256": "ef2cc6add137447b03f4c24b8db5fb981bd73c60beeaa1d8bfe455301b888166"
+    }
+  },
+  "config": {
+    "experiment": "T12",
+    "note": "Áp giao thức đánh giá v3 lên kết quả T7 có sẵn; không chạy lại B0/B1/TRIV. Thư mục đầu vào lấy từ t7_output_dir và t9_output_dir của configs/paths.json.",
+    "inputs": {
+      "t7_results": "t7_results.csv",
+      "p5_baselines": "p5_baselines.csv",
+      "p4_checkpoints": "p4_checkpoints.csv"
+    },
+    "campaigns": [
+      "Catalonia",
+      "Iran_5"
+    ],
+    "delta": 0.03,
+    "n_boot": 2000,
+    "seed": 42,
+    "q_main": 0.25,
+    "min_episodes": 5,
+    "weight_column": "io_actions_episode",
+    "consistency_checkpoint_type": "io_pct",
+    "consistency_tolerance": 1e-09,
+    "std_zero_tolerance": 1e-12,
+    "methods": {
+      "b0": [
+        "B0_K2",
+        "B0_K3"
+      ],
+      "b1_goc": "B1_goc",
+      "b1_chuan": "B1_chuan",
+      "triv_prefix": "TRIV_",
+      "triv_best": "TRIV_best",
+      "triv_loco": "TRIV_LOCO"
+    },
+    "seed_std_methods": [
+      "B1_chuan",
+      "B1_goc",
+      "B0_K2",
+      "B0_K3"
+    ],
+    "pairs": [
+      [
+        "B1_chuan",
+        "TRIV_LOCO"
+      ],
+      [
+        "B1_goc",
+        "TRIV_LOCO"
+      ],
+      [
+        "B1_chuan",
+        "B0_K2"
+      ],
+      [
+        "B1_chuan",
+        "B0_K3"
+      ],
+      [
+        "B1_chuan",
+        "B1_goc"
+      ]
+    ],
+    "tiebreak": {
+      "permutation_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "method": "B1_chuan",
+      "ref": "TRIV_LOCO_mean20",
+      "main_outputs": {
+        "per_episode": "t12_per_episode.csv",
+        "compare": "t12_compare.csv",
+        "loco_choice": "t12_loco_choice.csv"
+      },
+      "outputs": {
+        "p5_auc": "t12_p5_tiebreak_auc.csv",
+        "triv": "t12_triv_tiebreak.csv",
+        "compare": "t12_compare_tiebreak.csv",
+        "run": "run_tiebreak.json"
+      }
+    }
+  },
+  "t7_triv_tiebreak_seed": 42,
+  "t7_reproduction": {
+    "n_checked": 139,
+    "max_abs_diff": 0.0,
+    "tolerance": 1e-09
+  },
+  "notes": {
+    "p5_auc": "Thứ tự phá hòa của P5 = oracle_top_k: sort_index (accountid tăng dần) rồi sắp ổn định, nên trong mỗi nhóm hòa tài khoản ID nhỏ hơn đứng trước ở cả hai chiều. AUC = roc_auc_score(nhãn IO, −vị trí theo ID tăng dần) trên tập đánh giá tại mỗi mốc io_pct đạt; 0,5 = độc lập nhãn, > 0,5 = IO có ID nhỏ hơn.",
+    "triv_tiebreak": "F1* của tổ hợp LOCO tính lại bằng _rows_from_scores của T7 (bí danh _alias_ids + oracle_top_k của T9) với seed hoán vị 0–19; điểm và tập đánh giá lấy như T7 (observe theo đợt tại tau). Seed triv_tiebreak_seed của T7 dùng để kiểm tái tạo t7_results.csv.",
+    "compare": "TRIV_LOCO_mean20 = trung bình F1* qua các hoán vị tại từng đợt-mốc; B1_chuan lấy từ t12_per_episode.csv; bootstrap như t12_compare.csv. verdict_t7 là kết luận B1_chuan vs TRIV_LOCO trong t12_compare.csv."
+  },
+  "outputs": [
+    "t12_compare_tiebreak.csv",
+    "t12_p5_tiebreak_auc.csv",
+    "t12_triv_tiebreak.csv"
+  ]
+}

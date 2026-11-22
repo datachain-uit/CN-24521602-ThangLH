@@ -1,0 +1,81 @@
+campaign,q,method,ref,weighting,primary,role,n,mean,lo,hi,verdict
+Catalonia,0.1,B1_chuan,TRIV_LOCO,equal,True,thăm dò,16,0.04153589903783401,-0.06164397228055799,0.130893378059956,không kết luận
+Catalonia,0.1,B1_chuan,TRIV_LOCO,io_actions_episode,False,thăm dò,16,0.04855024218067928,-0.02640713647938703,0.15272262736802425,không kết luận
+Catalonia,0.1,B1_goc,TRIV_LOCO,equal,False,thăm dò,16,0.02146872455889482,-0.09101574488946297,0.12007414111247793,không kết luận
+Catalonia,0.1,B1_goc,TRIV_LOCO,io_actions_episode,False,thăm dò,16,0.03925710812449676,-0.03379570146092288,0.1352424342799095,không kết luận
+Catalonia,0.1,B1_chuan,B0_K2,equal,False,thăm dò,16,0.33151691900823876,0.23130669225873013,0.4171860661155741,vượt
+Catalonia,0.1,B1_chuan,B0_K2,io_actions_episode,False,thăm dò,16,0.43497641481224664,0.2853094786850646,0.5234910901907455,vượt
+Catalonia,0.1,B1_chuan,B0_K3,equal,False,thăm dò,16,0.3515413619394552,0.25559558001861493,0.4299630523330343,vượt
+Catalonia,0.1,B1_chuan,B0_K3,io_actions_episode,False,thăm dò,16,0.44689288982617087,0.3239636855977913,0.5122737485809665,vượt
+Catalonia,0.1,B1_chuan,B1_goc,equal,False,thăm dò,16,0.020067174478939187,-0.01596613549738549,0.0668785717958512,không kết luận
+Catalonia,0.1,B1_chuan,B1_goc,io_actions_episode,False,thăm dò,16,0.00929313405618252,-0.008609389496720478,0.03825337475705572,không kết luận
+Catalonia,0.25,B1_chuan,TRIV_LOCO,equal,True,khẳng định,23,0.04288405568310052,-0.0254173384693152,0.10448323604205327,không kết luận
+Catalonia,0.25,B1_chuan,TRIV_LOCO,io_actions_episode,False,khẳng định,23,0.07224397392084882,0.02352074749138218,0.133301919642912,vượt
+Catalonia,0.25,B1_goc,TRIV_LOCO,equal,False,khẳng định,23,0.02225126518850262,-0.044130376507731335,0.08588022611835415,không kết luận
+Catalonia,0.25,B1_goc,TRIV_LOCO,io_actions_episode,False,khẳng định,23,0.052232374042784926,0.0038108781229262887,0.10131214782525584,vượt
+Catalonia,0.25,B1_chuan,B0_K2,equal,False,khẳng định,23,0.3629347202226446,0.2919890249282173,0.42857812483658736,vượt
+Catalonia,0.25,B1_chuan,B0_K2,io_actions_episode,False,khẳng định,23,0.4735885908176968,0.3446570938883255,0.5349372786151806,vượt
+Catalonia,0.25,B1_chuan,B0_K3,equal,False,khẳng định,23,0.3949493733067665,0.33119022672752435,0.4495143632744923,vượt
+Catalonia,0.25,B1_chuan,B0_K3,io_actions_episode,False,khẳng định,23,0.4798633181403176,0.391809502946429,0.5322208531232911,vượt
+Catalonia,0.25,B1_chuan,B1_goc,equal,False,khẳng định,23,0.020632790494597913,0.0009891033399157911,0.04324576793056857,không kết luận
+Catalonia,0.25,B1_chuan,B1_goc,io_actions_episode,False,khẳng định,23,0.0200115998780639,0.0027517459916324865,0.0487696777335101,không kết luận
+Catalonia,0.5,B1_chuan,TRIV_LOCO,equal,True,thăm dò,28,-0.014254542010612973,-0.09741997610415867,0.0627206954542069,không kết luận
+Catalonia,0.5,B1_chuan,TRIV_LOCO,io_actions_episode,False,thăm dò,28,0.1135725971624984,-0.01635435833215206,0.17280736358444487,không kết luận
+Catalonia,0.5,B1_goc,TRIV_LOCO,equal,False,thăm dò,28,-0.04728473729960969,-0.130876322971945,0.03343109762546487,không kết luận
+Catalonia,0.5,B1_goc,TRIV_LOCO,io_actions_episode,False,thăm dò,28,0.08860124641211767,-0.05427314783463278,0.15105613583837,không kết luận
+Catalonia,0.5,B1_chuan,B0_K2,equal,False,thăm dò,28,0.34385097678797033,0.25676266095320255,0.4269149097387311,vượt
+Catalonia,0.5,B1_chuan,B0_K2,io_actions_episode,False,thăm dò,28,0.5354680989759616,0.3609033168969941,0.6091129125426107,vượt
+Catalonia,0.5,B1_chuan,B0_K3,equal,False,thăm dò,28,0.37227207684506863,0.28920872859184266,0.4507903188441383,vượt
+Catalonia,0.5,B1_chuan,B0_K3,io_actions_episode,False,thăm dò,28,0.5368628826735417,0.39012672312029023,0.5997009672641938,vượt
+Catalonia,0.5,B1_chuan,B1_goc,equal,False,thăm dò,28,0.033030195288996714,0.010512290761424119,0.06180696886503006,vượt
+Catalonia,0.5,B1_chuan,B1_goc,io_actions_episode,False,thăm dò,28,0.024971350750380726,0.01034621326736426,0.04671017412049713,không kết luận
+Catalonia,1.0,B1_chuan,TRIV_LOCO,equal,True,thăm dò,34,-0.0003473323869475174,-0.08899326803965958,0.08193040621108681,không kết luận
+Catalonia,1.0,B1_chuan,TRIV_LOCO,io_actions_episode,False,thăm dò,34,0.14958642985908446,-0.017525068193772645,0.22338913834505209,không kết luận
+Catalonia,1.0,B1_goc,TRIV_LOCO,equal,False,thăm dò,34,-0.0391569018387246,-0.12796170304906704,0.044711350150057436,không kết luận
+Catalonia,1.0,B1_goc,TRIV_LOCO,io_actions_episode,False,thăm dò,34,0.12779249583770097,-0.044284820603907066,0.20286239354086863,không kết luận
+Catalonia,1.0,B1_chuan,B0_K2,equal,False,thăm dò,34,0.3910986804557468,0.30212071249793127,0.47412868044108186,vượt
+Catalonia,1.0,B1_chuan,B0_K2,io_actions_episode,False,thăm dò,34,0.5641066188333033,0.414112612235549,0.6314977174731587,vượt
+Catalonia,1.0,B1_chuan,B0_K3,equal,False,thăm dò,34,0.39913490042017713,0.3139898685921183,0.4770335353638006,vượt
+Catalonia,1.0,B1_chuan,B0_K3,io_actions_episode,False,thăm dò,34,0.5617425727478406,0.4191423648653594,0.626409805497201,vượt
+Catalonia,1.0,B1_chuan,B1_goc,equal,False,thăm dò,34,0.038809569451777076,0.016333625732996456,0.07062528073046481,vượt
+Catalonia,1.0,B1_chuan,B1_goc,io_actions_episode,False,thăm dò,34,0.02179393402138356,0.01149232259483572,0.03663569716540121,không kết luận
+Iran_5,0.1,B1_chuan,TRIV_LOCO,equal,True,thăm dò,6,-0.2236652427082504,-0.4589834208798857,-0.01980019836608977,thua
+Iran_5,0.1,B1_chuan,TRIV_LOCO,io_actions_episode,False,thăm dò,6,-0.179080422642253,-0.5273458711310223,0.03904017125491776,không kết luận
+Iran_5,0.1,B1_goc,TRIV_LOCO,equal,False,thăm dò,6,-0.20969698873999634,-0.4417115774184917,-0.009784199758037232,thua
+Iran_5,0.1,B1_goc,TRIV_LOCO,io_actions_episode,False,thăm dò,6,-0.17055640990771395,-0.5145818183286107,0.04621324486807106,không kết luận
+Iran_5,0.1,B1_chuan,B0_K2,equal,False,thăm dò,6,0.15733025495636446,-0.14397647989069431,0.433493699549602,không kết luận
+Iran_5,0.1,B1_chuan,B0_K2,io_actions_episode,False,thăm dò,6,0.23220655142790647,-0.2126942807625522,0.5381655245326075,không kết luận
+Iran_5,0.1,B1_chuan,B0_K3,equal,False,thăm dò,6,0.19136223723816828,-0.09280746503551751,0.4705126540019451,không kết luận
+Iran_5,0.1,B1_chuan,B0_K3,io_actions_episode,False,thăm dò,6,0.27049231042082705,-0.16263567229775125,0.5669880656840548,không kết luận
+Iran_5,0.1,B1_chuan,B1_goc,equal,False,thăm dò,6,-0.013968253968253972,-0.04190476190476192,0.0,không kết luận
+Iran_5,0.1,B1_chuan,B1_goc,io_actions_episode,False,thăm dò,6,-0.008524012734539054,-0.03511160714285715,0.0,không kết luận
+Iran_5,0.25,B1_chuan,TRIV_LOCO,equal,True,khẳng định,10,-0.16640840241598384,-0.3536318037633327,0.01733143835077798,không kết luận
+Iran_5,0.25,B1_chuan,TRIV_LOCO,io_actions_episode,False,khẳng định,10,-0.2083693282424558,-0.4350185949216177,-0.030666084061506754,thua
+Iran_5,0.25,B1_goc,TRIV_LOCO,equal,False,khẳng định,10,-0.16640840241598384,-0.3536318037633327,0.01733143835077798,không kết luận
+Iran_5,0.25,B1_goc,TRIV_LOCO,io_actions_episode,False,khẳng định,10,-0.2083693282424558,-0.4350185949216177,-0.030666084061506754,thua
+Iran_5,0.25,B1_chuan,B0_K2,equal,False,khẳng định,10,0.18986396846673043,-0.04991168073877056,0.4078121606947517,không kết luận
+Iran_5,0.25,B1_chuan,B0_K2,io_actions_episode,False,khẳng định,10,0.1669157294774592,-0.14392508497325135,0.40135870337055884,không kết luận
+Iran_5,0.25,B1_chuan,B0_K3,equal,False,khẳng định,10,0.21683670703861563,-0.016540224734384348,0.43097112424319245,không kết luận
+Iran_5,0.25,B1_chuan,B0_K3,io_actions_episode,False,khẳng định,10,0.19678615902911759,-0.10825310415186334,0.42887826312954974,không kết luận
+Iran_5,0.25,B1_chuan,B1_goc,equal,False,khẳng định,10,0.0,0.0,0.0,không kết luận
+Iran_5,0.25,B1_chuan,B1_goc,io_actions_episode,False,khẳng định,10,0.0,0.0,0.0,không kết luận
+Iran_5,0.5,B1_chuan,TRIV_LOCO,equal,True,thăm dò,11,-0.2297291198995609,-0.3935597702861297,-0.062260213616869196,thua
+Iran_5,0.5,B1_chuan,TRIV_LOCO,io_actions_episode,False,thăm dò,11,-0.3357966459311027,-0.43855208295895737,-0.10074887274217698,thua
+Iran_5,0.5,B1_goc,TRIV_LOCO,equal,False,thăm dò,11,-0.24212581411443698,-0.40201707929941444,-0.07868803975215648,thua
+Iran_5,0.5,B1_goc,TRIV_LOCO,io_actions_episode,False,thăm dò,11,-0.34754363388291,-0.44117974761252643,-0.12622215245871693,thua
+Iran_5,0.5,B1_chuan,B0_K2,equal,False,thăm dò,11,0.11781827173870309,-0.08583903497178096,0.3300666428023301,không kết luận
+Iran_5,0.5,B1_chuan,B0_K2,io_actions_episode,False,thăm dò,11,0.032528573340075584,-0.0961524815892418,0.2696533179336093,không kết luận
+Iran_5,0.5,B1_chuan,B0_K3,equal,False,thăm dò,11,0.14189817062704296,-0.06421388643450693,0.349343304661038,không kết luận
+Iran_5,0.5,B1_chuan,B0_K3,io_actions_episode,False,thăm dò,11,0.05499833572706302,-0.07864336858958787,0.28073587712860965,không kết luận
+Iran_5,0.5,B1_chuan,B1_goc,equal,False,thăm dò,11,0.012396694214876037,0.0,0.037190082644628114,không kết luận
+Iran_5,0.5,B1_chuan,B1_goc,io_actions_episode,False,thăm dò,11,0.011746987951807232,0.0,0.049662552839471956,không kết luận
+Iran_5,1.0,B1_chuan,TRIV_LOCO,equal,True,thăm dò,11,-0.15045497648038406,-0.34342144968785043,0.033444520201184394,không kết luận
+Iran_5,1.0,B1_chuan,TRIV_LOCO,io_actions_episode,False,thăm dò,11,-0.22503444490774016,-0.36393665574238643,0.03681130800683035,không kết luận
+Iran_5,1.0,B1_goc,TRIV_LOCO,equal,False,thăm dò,11,-0.14833376435917192,-0.34006182420869185,0.03345965855175465,không kết luận
+Iran_5,1.0,B1_goc,TRIV_LOCO,io_actions_episode,False,thăm dò,11,-0.22218103125312166,-0.360235773655859,0.03721173621900392,không kết luận
+Iran_5,1.0,B1_chuan,B0_K2,equal,False,thăm dò,11,0.2280065238545805,-0.021801269955716508,0.45819876191886183,không kết luận
+Iran_5,1.0,B1_chuan,B0_K2,io_actions_episode,False,thăm dò,11,0.175869009170323,0.03503006709020437,0.438102521790948,vượt
+Iran_5,1.0,B1_chuan,B0_K3,equal,False,thăm dò,11,0.2560741197965863,0.0172661001069277,0.48227112491624385,vượt
+Iran_5,1.0,B1_chuan,B0_K3,io_actions_episode,False,thăm dò,11,0.19666191649264145,0.06128221186745162,0.44899442794532535,vượt
+Iran_5,1.0,B1_chuan,B1_goc,equal,False,thăm dò,11,-0.0021212121212121223,-0.0063636363636363664,0.0,không kết luận
+Iran_5,1.0,B1_chuan,B1_goc,io_actions_episode,False,thăm dò,11,-0.0028534136546184753,-0.010948670064123882,0.0,không kết luận

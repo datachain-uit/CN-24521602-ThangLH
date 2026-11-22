@@ -1,0 +1,8 @@
+campaign,score,direction,t7_method,mean_F1_star_other,n_rows_other,n_campaigns_other
+Armenia,actions_per_active_day,low,TRIV_actions_per_active_day_low,0.7971180795920032,2382,6
+Bangladesh,actions_per_active_day,low,TRIV_actions_per_active_day_low,0.7948615361254279,2310,6
+Catalonia,actions_per_active_day,low,TRIV_actions_per_active_day_low,0.7395456358144039,1398,6
+Ghana_Nigeria,actions_per_active_day,low,TRIV_actions_per_active_day_low,0.7878502330148062,1752,6
+Iran_5,actions_per_active_day,low,TRIV_actions_per_active_day_low,0.7806292901842529,2076,6
+Spain,actions_per_active_day,low,TRIV_actions_per_active_day_low,0.7927760765995936,2400,6
+Thailand,actions_per_active_day,low,TRIV_actions_per_active_day_low,0.7906491153303057,2334,6
