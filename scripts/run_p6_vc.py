@@ -124,35 +124,56 @@ def file_lock(target, timeout=300.0, unreadable_after=60.0):
     """
     lock = Path(f"{target}.lock")
     start = time.time()
+    text = ""
     while True:
+        if time.time() - start > timeout:
+            raise TimeoutError(f"Không lấy được khóa {lock} (chủ khóa: {text.strip() or 'không đọc được'}).")
         try:
             handle = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-            os.write(handle, json.dumps(process_identity()).encode("utf-8"))
-            os.fsync(handle)
-            break
+        except PermissionError:
+            time.sleep(0.02)  # Windows: tệp khóa cũ đang chờ xóa (delete pending) hoặc đang bị tiến trình khác mở
+            continue
         except FileExistsError:
             try:
                 text, age = lock.read_text(encoding="utf-8"), time.time() - lock.stat().st_mtime
             except (FileNotFoundError, PermissionError):
+                time.sleep(0.02)
                 continue
             alive = owner_alive(text)
             if alive is False or (alive is None and age > unreadable_after):
                 try:
                     lock.unlink()
                 except (FileNotFoundError, PermissionError):
+                    time.sleep(0.02)
                     continue
                 message = f"CẢNH BÁO: gỡ khóa cũ {lock.name} của tiến trình không còn sống ({text.strip() or 'tệp rỗng'}, {age:.0f}s)."
                 STALE_EVENTS.append((lock.parent.resolve(), now(), message))
                 print(message, flush=True)
                 continue
-            if time.time() - start > timeout:
-                raise TimeoutError(f"Không lấy được khóa {lock} (chủ khóa còn sống: {text.strip()}).")
             time.sleep(0.05)
+            continue
+        try:
+            os.write(handle, json.dumps(process_identity()).encode("utf-8"))
+            os.fsync(handle)
+        finally:
+            os.close(handle)
+        break
     try:
         yield
     finally:
-        os.close(handle)
-        lock.unlink(missing_ok=True)
+        retry_windows(lambda: lock.unlink(missing_ok=True), f"gỡ khóa {lock}")
+
+
+def retry_windows(action, what, timeout=30.0):
+    """Thử lại khi Windows báo tệp đang bị tiến trình khác mở (WinError 32/5, PermissionError); hết thời gian thì báo lỗi."""
+    start = time.time()
+    while True:
+        try:
+            return action()
+        except PermissionError:
+            if time.time() - start > timeout:
+                raise
+            time.sleep(0.01)
 
 
 def write_json_atomic(path, payload):
@@ -161,7 +182,7 @@ def write_json_atomic(path, payload):
         handle.write(json.dumps(payload, ensure_ascii=False, indent=2, default=str) + "\n")
         handle.flush()
         os.fsync(handle.fileno())
-    os.replace(temp, path)
+    retry_windows(lambda: os.replace(temp, path), f"thay {path}")
 
 
 def update_run(path, change):

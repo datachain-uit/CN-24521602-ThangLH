@@ -142,6 +142,23 @@ def test_khoa_cua_tien_trinh_con_song_thi_cho(tmp_path):
     run_p6_vc.STALE_EVENTS.clear()
 
 
+def test_ba_tien_trinh_dong_thoi_khoa_va_gop_sessions(tmp_path):
+    """3 tiến trình (mỗi tiến trình một chiến dịch) cùng ghi P6/VC run.json và run.log: không lỗi khóa, sessions[] gộp đủ, log không mất dòng, không còn tệp khóa/tạm."""
+    campaigns = ["Catalonia", "Iran_5", "Thailand"]
+    codes = [f"import sys; sys.path[:0] = [{str(ROOT)!r}, {str(ROOT / 'tests')!r}]; import test_resume; test_resume.drive({['--campaigns', name, '--output-root', str(tmp_path), '--allow-dirty', '--n-processes', '3']!r})" for name in campaigns]
+    procs = [subprocess.Popen([sys.executable, "-c", code], cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8") for code in codes]
+    outputs = [proc.communicate(timeout=900) for proc in procs]
+    assert [proc.returncode for proc in procs] == [0, 0, 0], [err[-2000:] for _, err in outputs]
+    for task in ("P6", "VC"):
+        payload = json.loads((tmp_path / task / "run.json").read_text(encoding="utf-8"))
+        assert sorted(tuple(item["campaigns"]) for item in payload["sessions"]) == [(name,) for name in sorted(campaigns)]
+        assert {item["status"] for item in payload["sessions"]} == {"finished"} and {item["n_processes"] for item in payload["sessions"]} == {3}
+        assert sorted(payload["campaigns"]) == sorted(campaigns) and all(info["complete"] for info in payload["campaigns"].values())
+        units = [line for line in (tmp_path / task / "run.log").read_text(encoding="utf-8").splitlines() if "\tunit\t" in line]
+        assert len(units) == len({line.split("\t")[3] for line in units}) == sum(info["done_units"] for info in payload["campaigns"].values())
+        assert not [path.name for path in (tmp_path / task).iterdir() if path.suffix == ".lock" or ".tmp" in path.name]
+
+
 def test_check_va_tu_choi_khi_head_khac(straight, tmp_path):
     check = run(straight, "--check")
     assert check.returncode == 0 and "'complete': True" in check.stdout
