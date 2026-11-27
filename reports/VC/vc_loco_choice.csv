@@ -1,0 +1,15 @@
+protocol,campaign,score,direction,triv_method,mean_F1_star_other,n_rows_other,n_campaigns_other,t12_score,t12_direction,t12_mean_F1_star_other,t12_n_rows_other,same_choice_as_t12
+GOC,Catalonia,actions_per_active_day,low,TRIV_actions_per_active_day_low,0.7395456358144039,1398,6,actions_per_active_day,low,0.7395456358144039,1398,True
+GOC,Iran_5,actions_per_active_day,low,TRIV_actions_per_active_day_low,0.7806292901842529,2076,6,actions_per_active_day,low,0.7806292901842529,2076,True
+GOC,Thailand,actions_per_active_day,low,TRIV_actions_per_active_day_low,0.7906491153303057,2334,6,actions_per_active_day,low,0.7906491153303057,2334,True
+GOC,Ghana_Nigeria,actions_per_active_day,low,TRIV_actions_per_active_day_low,0.7878502330148063,1752,6,actions_per_active_day,low,0.7878502330148062,1752,True
+GOC,Bangladesh,actions_per_active_day,low,TRIV_actions_per_active_day_low,0.7948615361254279,2310,6,actions_per_active_day,low,0.7948615361254279,2310,True
+GOC,Spain,actions_per_active_day,low,TRIV_actions_per_active_day_low,0.7927760765995936,2400,6,actions_per_active_day,low,0.7927760765995936,2400,True
+GOC,Armenia,actions_per_active_day,low,TRIV_actions_per_active_day_low,0.7971180795920033,2382,6,actions_per_active_day,low,0.7971180795920032,2382,True
+VC,Catalonia,actions_per_active_day,low,TRIV_actions_per_active_day_low,0.7376360857092747,1380,6,actions_per_active_day,low,0.7395456358144039,1398,True
+VC,Iran_5,actions_per_active_day,low,TRIV_actions_per_active_day_low,0.7807851665583619,2064,6,actions_per_active_day,low,0.7806292901842529,2076,True
+VC,Thailand,actions_per_active_day,low,TRIV_actions_per_active_day_low,0.7894988872564526,2322,6,actions_per_active_day,low,0.7906491153303057,2334,True
+VC,Ghana_Nigeria,actions_per_active_day,low,TRIV_actions_per_active_day_low,0.7847249156624893,1764,6,actions_per_active_day,low,0.7878502330148062,1752,True
+VC,Bangladesh,actions_per_active_day,low,TRIV_actions_per_active_day_low,0.7925214803905292,2292,6,actions_per_active_day,low,0.7948615361254279,2310,True
+VC,Spain,actions_per_active_day,low,TRIV_actions_per_active_day_low,0.7910022645668414,2388,6,actions_per_active_day,low,0.7927760765995936,2400,True
+VC,Armenia,actions_per_active_day,low,TRIV_actions_per_active_day_low,0.7955257839429632,2370,6,actions_per_active_day,low,0.7971180795920032,2382,True

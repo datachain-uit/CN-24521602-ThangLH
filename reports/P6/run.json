@@ -1,0 +1,402 @@
+{
+  "task": "P6",
+  "review": "Review-2026-11-21 §6.3–6.5; Review-2026-11-22",
+  "created_utc": "2026-11-22T17:50:38+00:00",
+  "commit": "ea7196e5b576c32c625ac00228d2519024473de7",
+  "tags": [
+    "p6-v2"
+  ],
+  "code_dirty": false,
+  "config_hash": "62f921d52d24fbc2ef22e47b9b171aebc7297a98ab7e29b38d3a273dbee4f6db",
+  "configs": {
+    "t7": {
+      "experiment": "T7",
+      "review_date": "2026-11-15",
+      "note": "Batch theo checkpoint, không phải cập nhật tăng dần (C1 sau 30/11). beta chọn một lần mỗi (tau, lớp, biến thể) với seed = community_seeds[0]; 5 seed chỉ dùng cho Leiden.",
+      "community_seeds": [
+        42,
+        43,
+        44,
+        45,
+        46
+      ],
+      "beta_bounds": [
+        0.0,
+        10.0
+      ],
+      "brent_xatol": 1e-05,
+      "edge_tolerance": 1e-09,
+      "leiden": {
+        "partition": "SurpriseVertexPartition",
+        "layer_weights": "edge_count",
+        "n_iterations": -1
+      },
+      "ds1_layers": [
+        "retweet",
+        "hashtag",
+        "mention",
+        "url"
+      ],
+      "ds1_campaigns": [
+        "Iran_5",
+        "Catalonia"
+      ],
+      "control_min": 1,
+      "run_order": [
+        "DS2",
+        "Iran_5",
+        "Catalonia"
+      ],
+      "priority_q": {
+        "Catalonia": 0.25
+      },
+      "q_values": [
+        0.1,
+        0.25,
+        0.5,
+        1.0
+      ],
+      "b0_clusters": [
+        2,
+        3
+      ],
+      "triv_tiebreak_seed": 42,
+      "t9_adapter": "src.eval.t7_checkpoints:infer_partition",
+      "ds2": {
+        "data_seeds": [
+          20261108,
+          20261109,
+          20261110,
+          20261111,
+          20261112
+        ],
+        "configurations": {
+          "L123": [
+            1,
+            2,
+            3
+          ],
+          "L3": [
+            3
+          ]
+        },
+        "t0_minutes": 1920,
+        "pre_t0_offsets_minutes": [
+          1440,
+          60,
+          1
+        ]
+      },
+      "s2": {
+        "repetitions": 2000,
+        "n_inauthentic": 6,
+        "n_authentic": 40,
+        "author_wp": {
+          "2": 0.52,
+          "3": 0.36
+        },
+        "tolerance_author": 0.02,
+        "tolerance_standard": 0.01,
+        "standard_reference": "E[WP] = pi + (1 - pi)(K - 1)/(N - 1)"
+      },
+      "s3": {
+        "min_coordinated": 2,
+        "precision_threshold": 0.5
+      }
+    },
+    "p6": {
+      "experiment": "P6",
+      "review": "Review-2026-11-21 §6.3–6.5; Review-2026-11-22",
+      "note": "Giao thức gốc (P1–P5 của T9, control_min của configs/t7.json). Chỉ B1-chuẩn (keep_zero = True). β chọn một lần mỗi (mốc, biến thể, lớp) bằng community_seeds[0] của configs/t7.json; seed chỉ dùng cho Leiden và RNG xáo trộn S1. Thêm chiến dịch (vd. Russia_5) = thêm vào campaigns và cap_k_p6, không sửa mã.",
+      "output_dir": "reports/P6",
+      "campaigns": [
+        "Catalonia",
+        "Iran_5",
+        "Thailand"
+      ],
+      "q_values": [
+        0.25,
+        1.0
+      ],
+      "seeds": [
+        42,
+        43,
+        44
+      ],
+      "method": "B1_chuan",
+      "variants": [
+        "main",
+        "without_hashtag",
+        "shuffle_account_day",
+        "cap_account_day"
+      ],
+      "reset_state_campaigns": [
+        "Catalonia"
+      ],
+      "cap_k_p6": {
+        "Catalonia": 2,
+        "Iran_5": 1,
+        "Thailand": 3
+      },
+      "cap_k_rule": "ceil(median) hành động/tài khoản/ngày của IO trên ngày covered_c1, đối chiếu reports/T9_EDA_Seckin/p2_account_day_activity.csv (scope = covered_c1, label = IO); lệch thì dừng.",
+      "interpretation": {
+        "q_main": 0.25,
+        "q_exploratory": [
+          1.0
+        ],
+        "min_episodes": 5,
+        "strong_drop": 0.1,
+        "strong_min_share": 0.6666666666666666,
+        "n_boot": 2000,
+        "bootstrap_seed": 42,
+        "weighting_main": "equal",
+        "weighting_sensitivity": "io_actions_episode",
+        "rule": "d_e = F1*(biến thể) − F1*(main), F1* trung bình 3 seed trong từng đợt; compare(variant, main, delta = strong_drop): 'thua' ⇔ mean ≤ −0,10 và cận trên CI 95% < 0. Phụ thuộc mạnh ⇔ 'thua' ở ≥ 2/3 chiến dịch đủ điều kiện (≥ 5 đợt hợp lệ ở q_main, biến thể main), tại q_main.",
+        "factors": {
+          "cap_account_day": "khối lượng",
+          "shuffle_account_day": "thời gian trong ngày",
+          "without_hashtag": "lớp hashtag",
+          "reset_state": "trạng thái tích lũy"
+        }
+      },
+      "qualitative": {
+        "campaigns": [
+          "Catalonia",
+          "Iran_5"
+        ],
+        "q": 1.0,
+        "variant": "main",
+        "seed": 42,
+        "top": 10,
+        "ranking": "Trong mỗi đợt: control_cluster_summary (T9) xếp các cụm ≥ 2 tài khoản có control theo (−số control, −tỷ lệ control, −kích thước cụm, accountid nhỏ nhất) và giữ 10 cụm đầu. Gộp mọi đợt đạt ở q = 100%: xếp lại theo (−số control, −tỷ lệ control, −kích thước cụm, episode, hạng trong đợt), giữ 10 cụm đầu mỗi chiến dịch. Chỉ thống kê tổng hợp, không ghi accountid hay nội dung."
+      }
+    },
+    "vc": {
+      "experiment": "VC",
+      "review": "Review-2026-11-21 §6.3 (P5b), §6.4, §6.5; Review-2026-11-22",
+      "note": "VC: cap_volume (giữ K_c hành động đầu tiên mỗi tài khoản–ngày, sắp t_min ổn định) áp lên luồng sau make_episodes. Ngày được phủ và đợt (start, end, qualified) phải không đổi (assert). Mốc q tính lại trên luồng đã cap (tau_vc); tau_goc, eligible_goc, eligible_vc đều ghi vào CSV. Thêm chiến dịch = thêm vào method_campaigns/p5_campaigns và k_c.",
+      "output_dir": "reports/VC",
+      "method_campaigns": [
+        "Catalonia",
+        "Iran_5",
+        "Thailand"
+      ],
+      "p5_campaigns": [
+        "Catalonia",
+        "Iran_5",
+        "Thailand",
+        "Ghana_Nigeria",
+        "Bangladesh",
+        "Spain",
+        "Armenia"
+      ],
+      "q_values": [
+        0.1,
+        0.25,
+        0.5,
+        1.0
+      ],
+      "day_values": [
+        1,
+        3,
+        7
+      ],
+      "day_values_note": "Mốc theo ngày chỉ cho P5 và TRIV (không B1), ở cả GOC và VC, để TRIV_LOCO chọn đúng quy tắc loco_choice của T12 (tag t12-v1): mọi mốc io_pct và theo ngày eligible của các chiến dịch khác.",
+      "seeds": [
+        42,
+        43,
+        44
+      ],
+      "b1_methods": [
+        "B1_chuan",
+        "B1_goc"
+      ],
+      "k_c": {
+        "Catalonia": 5,
+        "Iran_5": 3,
+        "Thailand": 14,
+        "Ghana_Nigeria": 16,
+        "Bangladesh": 19,
+        "Spain": 62,
+        "Armenia": 64
+      },
+      "k_c_rule": "ceil(P90) hành động/tài khoản/ngày của IO trên ngày covered_c1, đối chiếu reports/T9_EDA_Seckin/p2_account_day_activity.csv; lệch thì dừng.",
+      "k_c_label_note": "K_c dùng nhãn ở cấp giao thức: một số mỗi chiến dịch tính từ phân phối của IO, áp như nhau cho mọi tài khoản, mọi phương pháp và baseline (Review-2026-11-21 §6.3 P5b).",
+      "goc_reference": "Giao thức gốc (protocol = GOC, cùng thư mục VC): P5 (AUC, F1* tầm thường) trên p5_campaigns và TRIV trên method_campaigns, 4 mốc q và mốc theo ngày (day_values), chạy lại cùng commit. B1-chuẩn của giao thức gốc lấy từ P6 biến thể main, nên so sánh trước/sau VC của B1-chuẩn chỉ có ở q ∈ {0,25; 1,0}; B1-gốc không có so sánh trước/sau VC.",
+      "comparison": {
+        "q_main": 0.25,
+        "method": "B1_chuan",
+        "ref": "TRIV_LOCO",
+        "delta": 0.03,
+        "n_boot": 2000,
+        "bootstrap_seed": 42,
+        "min_episodes": 5,
+        "eligibility": "Trong một giao thức: eligible của giao thức đó (VC: eligible_vc). Trước/sau VC: chỉ các (đợt, q) eligible ở cả hai giao thức.",
+        "loco": "TRIV_LOCO của chiến dịch c chọn bằng loco_choice (T12) trên P5 cùng giao thức của các chiến dịch khác trong p5_campaigns (mốc io_pct ở q_values và mốc theo ngày ở day_values, dòng eligible); lựa chọn GOC đối chiếu với reports/T12/t12_loco_choice.csv."
+      }
+    }
+  },
+  "packages": {
+    "numpy": "2.5.4",
+    "pandas": "3.1.1",
+    "networkx": "3.7",
+    "igraph": "1.0.0",
+    "leidenalg": "0.12.0",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.1",
+    "time-aware-collaboration": "0.1.0"
+  },
+  "python": "3.13.15",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "cpu_count": 12,
+  "notes": {
+    "main": "T7 chạy ở commit khác với code_dirty = True nên không dùng lại; P6 chạy lại biến thể main trong cùng lần chạy.",
+    "b1": "B1-chuẩn = keep_zero True, B1-gốc = keep_zero False; ghép cặp một lần mỗi (mốc, biến thể dữ liệu), β chọn một lần mỗi (mốc, biến thể dữ liệu, biến thể B1, lớp) với community_seeds[0] của configs/t7.json; seed chỉ cho Leiden (và RNG xáo trộn S1 của shuffle_account_day).",
+    "u2": "U2 (t ≤ tau) kiểm ở observe, sau prepare_variant (mọi biến thể, kể cả cap/shuffle), trong checkpoint_pairs/select_beta_brent, trivial_rows và trước P5.",
+    "vc": "VC: cap_volume lên luồng sau make_episodes; assert ngày được phủ và đợt (start, end, qualified) không đổi; mốc q tính lại trên luồng đã cap (tau_vc, eligible_vc); tau_goc, eligible_goc lấy từ giao thức gốc. Không assert eligible theo mốc (đã quyết định: một số mốc đổi trạng thái).",
+    "goc": "protocol = GOC: P5 và TRIV trên luồng gốc ở 4 mốc q và mốc theo ngày, chạy lại cùng commit, làm tham chiếu trước/sau VC và giao thức gốc. B1-chuẩn GOC lấy từ P6 main (chỉ q = 25%, 100%); B1-gốc không có so sánh trước/sau VC.",
+    "day_marks": "Mốc theo ngày (day_values của configs/vc.json) chỉ chạy P5 và TRIV (không B1), ở cả GOC và VC, để chọn TRIV_LOCO đúng như loco_choice của T12 (tag t12-v1) trên mọi mốc io_pct và theo ngày eligible.",
+    "lock": "Tệp khóa ghi PID + create_time; khóa của tiến trình không còn sống được gỡ và ghi vào run.log.",
+    "ineligible": "Mốc không đạt: mỗi đơn vị một dòng với chỉ số trống; B1 mốc không đạt ghi seed trống.",
+    "code_dirty": "git status --porcelain -- src scripts configs tests (gồm cả untracked trong 4 thư mục này, như T7); reports/ không bị xét.",
+    "runtime_s": "B1: (chuẩn bị biến thể + ghép cặp) chia đều cho các đơn vị của lần dựng + dựng đồ thị / số seed + Leiden của seed. TRIV/P5: thời gian chia đều cho các dòng."
+  },
+  "sessions": [
+    {
+      "session_id": "ef6f9f23",
+      "pid": 28708,
+      "campaigns": [
+        "Catalonia"
+      ],
+      "started_utc": "2026-11-22T17:50:38+00:00",
+      "ended_utc": "2026-11-23T18:49:09+00:00",
+      "status": "finished",
+      "units_written": 7580,
+      "n_processes": 3,
+      "threads": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1"
+      },
+      "args": {
+        "campaigns": [
+          "Catalonia"
+        ],
+        "resume": false,
+        "check": false,
+        "n_processes": 3,
+        "output_root": null,
+        "allow_dirty": false,
+        "episodes": null,
+        "q": null,
+        "seeds": null
+      },
+      "peak_memory_mb": 5141.3,
+      "runtime_s_by_campaign": {
+        "Catalonia": 89910.9
+      }
+    },
+    {
+      "session_id": "27008e6e",
+      "pid": 28500,
+      "campaigns": [
+        "Thailand",
+        "Spain",
+        "Armenia"
+      ],
+      "started_utc": "2026-11-22T17:50:38+00:00",
+      "ended_utc": "2026-11-22T22:29:06+00:00",
+      "status": "finished",
+      "units_written": 912,
+      "n_processes": 3,
+      "threads": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1"
+      },
+      "args": {
+        "campaigns": [
+          "Thailand",
+          "Spain",
+          "Armenia"
+        ],
+        "resume": false,
+        "check": false,
+        "n_processes": 3,
+        "output_root": null,
+        "allow_dirty": false,
+        "episodes": null,
+        "q": null,
+        "seeds": null
+      },
+      "peak_memory_mb": 1855.0,
+      "runtime_s_by_campaign": {
+        "Thailand": 16692.2
+      }
+    },
+    {
+      "session_id": "cacd1cf0",
+      "pid": 36468,
+      "campaigns": [
+        "Iran_5",
+        "Ghana_Nigeria",
+        "Bangladesh"
+      ],
+      "started_utc": "2026-11-22T17:50:41+00:00",
+      "ended_utc": "2026-11-22T20:51:44+00:00",
+      "status": "finished",
+      "units_written": 4854,
+      "n_processes": 3,
+      "threads": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1"
+      },
+      "args": {
+        "campaigns": [
+          "Iran_5",
+          "Ghana_Nigeria",
+          "Bangladesh"
+        ],
+        "resume": false,
+        "check": false,
+        "n_processes": 3,
+        "output_root": null,
+        "allow_dirty": false,
+        "episodes": null,
+        "q": null,
+        "seeds": null
+      },
+      "peak_memory_mb": 428.4,
+      "runtime_s_by_campaign": {
+        "Iran_5": 10802.0
+      }
+    }
+  ],
+  "campaigns": {
+    "Iran_5": {
+      "expected_units": 256,
+      "done_units": 256,
+      "missing_units": 0,
+      "extra_units": 0,
+      "complete": true,
+      "updated_utc": "2026-11-22T20:50:43+00:00"
+    },
+    "Thailand": {
+      "expected_units": 72,
+      "done_units": 72,
+      "missing_units": 0,
+      "extra_units": 0,
+      "complete": true,
+      "updated_utc": "2026-11-22T22:28:51+00:00"
+    },
+    "Catalonia": {
+      "expected_units": 930,
+      "done_units": 930,
+      "missing_units": 0,
+      "extra_units": 0,
+      "complete": true,
+      "updated_utc": "2026-11-23T18:49:09+00:00"
+    }
+  }
+}
