@@ -1,0 +1,2 @@
+-r requirements.txt
+time-aware-collaboration @ git+https://github.com/letiziaia/time-aware-collaboration@bae7b15b9e29e2c00dde585c5eaf210c10092730
