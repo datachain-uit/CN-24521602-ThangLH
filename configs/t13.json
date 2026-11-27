@@ -1,0 +1,95 @@
+{
+    "experiment": "T13",
+    "review": "Review-2026-11-21 §6.7, §6.8",
+    "note": "DS2-v2: ngụy trang, mô phỏng 3 hai nhóm luân phiên, chế độ clean / seckin / phân rã. Batch theo mốc, không phải cập nhật tăng dần. Mọi ngưỡng chốt trước khi chạy.",
+    "ds_version": "v2",
+    "data_seeds": [
+        20261108, 20261109, 20261110, 20261111, 20261112, 20261113, 20261114, 20261115,
+        20261116, 20261117, 20261118, 20261119, 20261120, 20261121, 20261122, 20261123,
+        20261124, 20261125, 20261126, 20261127, 20261128, 20261129, 20261130, 20261131,
+        20261132, 20261133, 20261134, 20261135, 20261136, 20261137
+    ],
+    "table2": {
+        "note": "Lớp = mô phỏng, như T6b. Bảng 2 chính so theo biến thể no_camouflage; camouflage là phụ, giữ mean 3,57 của v1 (1000 hành động / 40 tài khoản / 7 ngày) và chỉ báo tỷ lệ bị nâng.",
+        "variants": ["no_camouflage", "camouflage"],
+        "n_inauthentic": 6,
+        "n_authentic": 40,
+        "days": 7,
+        "gamma_shape": 2.0,
+        "mean_actions_per_day": 3.5714285714285716,
+        "community_seeds": [42, 43, 44, 45, 46],
+        "configurations": [[1], [2], [3], [1, 2], [1, 3], [2, 3], [1, 2, 3]],
+        "pattern_rule": "Đúng mẫu: H = WP = 1 ở cấu hình 3; F1* = H = WP = 1 ở các cấu hình khác (Review-2026-11-21 §3.2).",
+        "pattern_tolerance": 1e-9,
+        "expected_config3": {"f1_star": 0.67, "homogeneity": 1.0, "weighted_precision": 1.0}
+    },
+    "world": {
+        "n_normal": 2000,
+        "n_coord": 6,
+        "days": 7,
+        "gamma_shape": 2.0,
+        "mean_actions_per_day": 8.0,
+        "layer_probs": {"hashtag": 0.4, "retweet": 0.3, "mention": 0.2, "url": 0.1},
+        "catalog_sizes": {"hashtag": 300, "retweet": 1000, "mention": 300, "url": 300},
+        "zipf_s": 1.1,
+        "sim_content_layers": {
+            "sim1": {"hashtag": "hashtag", "retweet": "retweet", "mention": "mention"},
+            "sim2": {"hashtag": "hashtag", "retweet": "retweet", "mention": "mention"},
+            "sim3": {"hashtag": "hashtag", "retweet": "retweet", "mention": "mention"}
+        }
+    },
+    "fallback_mean_actions_per_day": 16.0,
+    "max_fallbacks": 1,
+    "fallback_rule": "Chốt trước khi xem S3a: nếu S3a về khối lượng thất bại ở mode clean với shape chính, được đổi đúng một lần world.mean_actions_per_day từ 8 lên 16 (giữ shape = 2), chạy lại và ghi cả hai kết quả. Vẫn thất bại thì dừng và báo GVHD/SV, không đổi thêm tham số.",
+    "gamma_shape_grid": {
+        "values": [0.5, 1.0, 2.0, 4.0],
+        "note": "Lưới độ nhạy chốt trước khi có kết quả; chỉ AUC/TRIV các điểm tầm thường (không chạy B1), mọi chế độ, 30 seed, p1_methods = off. Chỉ báo cáo, không dừng."
+    },
+    "scenarios": [1, 2, 3],
+    "ctrl_cap_per_day": 100,
+    "clean_sample_from": "seckin_h0",
+    "modes": {
+        "clean": {"kind": "clean", "round_io": false, "ctrl_selection": "", "ctrl_offset": null},
+        "seckin_h0": {"kind": "seckin", "round_io": true, "ctrl_selection": "hashtag", "ctrl_offset": 0},
+        "seckin_h10": {"kind": "seckin", "round_io": true, "ctrl_selection": "hashtag", "ctrl_offset": 10},
+        "seckin_u0": {"kind": "seckin", "round_io": true, "ctrl_selection": "uniform", "ctrl_offset": 0},
+        "sampling_only": {"kind": "seckin", "round_io": false, "ctrl_selection": "hashtag", "ctrl_offset": 0},
+        "rounding_only": {"kind": "clean", "round_io": true, "ctrl_selection": "", "ctrl_offset": null}
+    },
+    "p1_methods": {
+        "off": "Chính: P2–P4 và thống kê Δt = 0 dùng P1 (harmonize_time); B0/B1/TRIV chạy trên thời gian độ phân giải giây.",
+        "on": "Độ nhạy: B0/B1/TRIV chạy trên t_min của P1 (làm tròn xuống phút), đúng nhánh DS1 của T7."
+    },
+    "runs": {
+        "b1": [["clean", "off"], ["seckin_h0", "off"], ["sampling_only", "off"], ["rounding_only", "off"], ["clean", "on"], ["seckin_h0", "on"]],
+        "triv_only": [["seckin_h10", "off"], ["seckin_u0", "off"]]
+    },
+    "leiden_seeds_main": [42],
+    "leiden_seeds_check": [42, 43, 44],
+    "n_check_seeds": 5,
+    "check_runs": [["clean", "off"], ["seckin_h0", "off"]],
+    "layers": ["retweet", "hashtag", "mention", "url"],
+    "episode_control_min": 1,
+    "marks": {
+        "q_values": [0.10, 0.25, 0.50, 1.00],
+        "q_main": 0.25,
+        "day_marks": [1, 3, 7],
+        "pre_t0_offsets_minutes": [1440, 60],
+        "min_accounts": 5,
+        "note": "q tính trên hành động phối hợp (is_coord_action) từ t0, không dùng make_checkpoints. Mốc ngày tính từ đầu đợt (P3), là thăm dò. Mốc full_7d chỉ để chẩn đoán AUC trên cả 7 ngày."
+    },
+    "t7_params": {"beta_bounds": [0.0, 10.0], "community_seeds": [42], "brent_xatol": 1e-5, "edge_tolerance": 1e-9, "b0_clusters": [2, 3]},
+    "triv_tiebreak_seed": 42,
+    "volume_score": {"score": "actions_per_active_day", "direction": "low"},
+    "first_seen_score": {"score": "first_seen", "direction": "low"},
+    "stats": {"n_boot": 2000, "boot_seed": 42, "delta": 0.03},
+    "criteria": {
+        "note": "Chốt trước khi chạy. Phạm vi chung: p1_methods = off, shape chính (world.gamma_shape), Leiden seed 42, tách theo kịch bản. CI: bootstrap theo data seed (stats.n_boot, stats.boot_seed) qua compare của T12. Mode seckin cho tiêu chí là seckin_h0; các biến thể seckin khác chỉ báo cáo. Mỗi world_mean có mặt trong kết quả được đánh giá riêng.",
+        "scope": {"p1_methods": "off", "leiden_seed": 42},
+        "s3a": {"mode": "clean", "scores": ["actions_per_active_day", "first_seen"], "direction": "low", "auc_range": [0.40, 0.60], "exclude_checkpoint_types": ["full_7d"], "triv_best_before_q": 0.25, "triv_best_one_max_seed_share": 0.10, "one_tolerance": 1e-12},
+        "s3b": {"mode": "clean", "report_modes": ["seckin_h0"], "method": "B1_chuan", "refs": ["B0_K2", "B0_K3"], "g_median_max": 0.10, "ci_lo_max": 0.0, "marks": "mọi mốc có tau_rel_t0 < 0 ở mọi seed"},
+        "s3c": {"mode": "clean", "scenarios": ["sim1", "sim2"], "q": 1.0, "method": "B1_chuan", "ref": "TRIV_LOCO", "verdict_required": "vượt", "report_q": [0.25], "report_scenarios": ["sim3"], "report_methods": ["B1_goc"], "loco_scope": "29 seed còn lại, trong cùng mode × scenario × p1_methods × mốc"},
+        "h1": {"q": 0.25, "clean_mode": "clean", "seckin_mode": "seckin_h0", "score": "actions_per_active_day", "direction": "low", "clean_auc_range": [0.40, 0.60], "seckin_auc_min": 0.80, "paired_ci_lo_gt": 0.0, "report_q": [1.0], "aggregate": {"all": "ủng hộ", "some": "ủng hộ một phần", "none": "không ủng hộ"}},
+        "fallback": {"trigger": "S3a về khối lượng thất bại ở mode clean, shape chính, trên đủ 30 seed của lần chạy chính thức", "not_from_smoke": true}
+    }
+}
