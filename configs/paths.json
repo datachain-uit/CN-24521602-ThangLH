@@ -16,5 +16,6 @@
   "t12_output_dir": "reports/T12",
   "partitions_dir": "data/partitions",
   "t13_config": "configs/t13.json",
-  "t13_output_dir": "reports/T13"
+  "t13_output_dir": "reports/T13",
+  "t11_output_dir": "reports/T11"
 }
